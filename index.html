@@ -6,13 +6,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Surgeon_Mwaipopo Education</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
 <style>
 *{box-sizing:border-box}
 body{margin:0;font-family:Arial,sans-serif;background:#f1f5f9;color:#172554}
 header{background:#082f49;color:white;padding:25px 15px;text-align:center}
 header h1{margin:0;font-size:25px}
-header p{margin-bottom:0}
 .container{max-width:1000px;margin:25px auto;padding:15px}
 .card{background:white;padding:20px;border-radius:12px;margin-bottom:18px;box-shadow:0 3px 12px #0001}
 h2,h3{color:#075985}
@@ -36,16 +34,15 @@ button:disabled{opacity:.5}
 .approved{background:#dcfce7;color:#166534}
 .rejected{background:#fee2e2;color:#991b1b}
 .message{padding:10px;background:#e0f2fe;border-radius:6px;margin:10px 0}
-.toolbar{margin:15px 0}
 .section-note{font-size:13px;color:#64748b}
+.question{padding:15px;border:1px solid #cbd5e1;border-radius:9px;margin:12px 0}
+.question label{display:block;padding:8px;margin:5px 0;background:#f8fafc;border-radius:6px}
+.question input{width:auto;margin-right:8px}
 footer{text-align:center;padding:20px;color:#64748b}
 hr{border:0;border-top:1px solid #e2e8f0;margin:25px 0}
-@media(min-width:650px){
-.stats{grid-template-columns:repeat(5,1fr)}
-}
+@media(min-width:650px){.stats{grid-template-columns:repeat(5,1fr)}}
 </style>
 </head>
-
 <body>
 
 <header>
@@ -57,7 +54,6 @@ hr{border:0;border-top:1px solid #e2e8f0;margin:25px 0}
 
 <!-- AUTHENTICATION -->
 <div id="authArea">
-
 <div class="card">
 <h2>Student Registration</h2>
 <input id="fullName" placeholder="Full Name">
@@ -74,12 +70,10 @@ hr{border:0;border-top:1px solid #e2e8f0;margin:25px 0}
 <button class="full" onclick="login()">Login</button>
 <p id="authMessage"></p>
 </div>
-
 </div>
 
 <!-- STUDENT DASHBOARD -->
 <div id="studentArea" class="card hidden">
-
 <h2>Student Dashboard</h2>
 <p>Welcome, <strong id="studentName"></strong></p>
 <p id="studentEmail"></p>
@@ -87,35 +81,39 @@ hr{border:0;border-top:1px solid #e2e8f0;margin:25px 0}
 <span class="status approved">APPROVED</span>
 
 <hr>
-
 <h2>My Study Materials</h2>
-<input id="studentSearch" placeholder="Search notes by title or subject..." oninput="renderMaterials('studentMaterials')">
-
+<input id="studentSearch" placeholder="Search notes..." oninput="renderMaterials('studentMaterials')">
 <select id="studentSubject" onchange="renderMaterials('studentMaterials')">
 <option value="">All Subjects</option>
 </select>
-
 <div id="studentMaterials">Loading notes...</div>
 <button class="secondary full" onclick="loadMaterials('studentMaterials')">Refresh Notes</button>
 
 <hr>
-
 <h2>Past Papers</h2>
-<p class="section-note">Find and download previous examination papers and marking schemes.</p>
-
 <input id="studentPaperSearch" placeholder="Search past papers..." oninput="renderPastPapers('studentPastPapers')">
-
 <select id="studentPaperSubject" onchange="renderPastPapers('studentPastPapers')">
 <option value="">All Subjects</option>
 </select>
-
 <select id="studentPaperYear" onchange="renderPastPapers('studentPastPapers')">
 <option value="">All Years</option>
 </select>
-
 <div id="studentPastPapers">Loading past papers...</div>
-
 <button class="secondary full" onclick="loadPastPapers('studentPastPapers')">Refresh Past Papers</button>
+
+<hr>
+<h2>Online Examinations</h2>
+<p class="section-note">Select an available examination and submit your answers before time expires.</p>
+<div id="studentExams">Loading examinations...</div>
+
+<div id="takeExamArea" class="hidden">
+<hr>
+<h3 id="activeExamTitle"></h3>
+<p id="examTimer"></p>
+<div id="examQuestions"></div>
+<button class="success full" id="submitExamButton" onclick="submitExam()">Submit Examination</button>
+</div>
+<div id="examResult" class="message hidden"></div>
 
 <button class="secondary full" onclick="logout()">Logout</button>
 </div>
@@ -126,112 +124,111 @@ hr{border:0;border-top:1px solid #e2e8f0;margin:25px 0}
 <div class="card">
 <h2>Admin Dashboard</h2>
 <p>Welcome, Administrator.</p>
-
 <h3>System Statistics</h3>
-
 <div class="stats">
-<div class="stat">
-<strong id="totalStudents">0</strong>
-<span>Total Students</span>
+<div class="stat"><strong id="totalStudents">0</strong><span>Total Students</span></div>
+<div class="stat"><strong id="approvedStudents">0</strong><span>Approved Students</span></div>
+<div class="stat"><strong id="pendingStudents">0</strong><span>Pending Students</span></div>
+<div class="stat"><strong id="totalMaterials">0</strong><span>Study Materials</span></div>
+<div class="stat"><strong id="totalPastPapers">0</strong><span>Past Papers</span></div>
 </div>
-
-<div class="stat">
-<strong id="approvedStudents">0</strong>
-<span>Approved Students</span>
-</div>
-
-<div class="stat">
-<strong id="pendingStudents">0</strong>
-<span>Pending Students</span>
-</div>
-
-<div class="stat">
-<strong id="totalMaterials">0</strong>
-<span>Study Materials</span>
-</div>
-
-<div class="stat">
-<strong id="totalPastPapers">0</strong>
-<span>Past Papers</span>
-</div>
-</div>
-
 <button class="secondary full" onclick="loadStatistics()">Refresh Statistics</button>
 </div>
 
-<!-- UPLOAD STUDY MATERIALS -->
 <div class="card">
 <h2>Upload Study Materials</h2>
-
 <input id="materialTitle" placeholder="Material Title">
 <input id="materialSubject" placeholder="Subject Name">
 <textarea id="materialDescription" placeholder="Description (optional)"></textarea>
 <input id="materialFile" type="file" accept=".pdf,application/pdf">
-
 <button class="full" id="uploadButton" onclick="uploadMaterial()">Upload PDF</button>
 <p id="uploadMessage"></p>
 </div>
 
-<!-- ADMIN MATERIALS -->
 <div class="card">
 <h2>Manage Study Materials</h2>
-
-<input id="adminSearch" placeholder="Search notes by title or subject..." oninput="renderMaterials('adminMaterials')">
-
+<input id="adminSearch" placeholder="Search notes..." oninput="renderMaterials('adminMaterials')">
 <select id="adminSubject" onchange="renderMaterials('adminMaterials')">
 <option value="">All Subjects</option>
 </select>
-
 <div id="adminMaterials">Loading notes...</div>
 <button class="secondary full" onclick="loadMaterials('adminMaterials')">Refresh Materials</button>
 </div>
 
-<!-- PAST PAPERS UPLOAD -->
 <div class="card">
 <h2>Upload Past Papers</h2>
-<p class="section-note">Upload an examination paper and, optionally, its marking scheme.</p>
-
-<input id="paperTitle" placeholder="Examination Title (e.g. NTA Level 4 Examination)">
-<input id="paperCourse" placeholder="Course (e.g. Clinical Medicine)" value="Clinical Medicine">
-<input id="paperSubject" placeholder="Subject (e.g. Anatomy)">
-<input id="paperYear" type="number" placeholder="Examination Year (e.g. 2025)">
-
+<input id="paperTitle" placeholder="Examination Title">
+<input id="paperCourse" placeholder="Course" value="Clinical Medicine">
+<input id="paperSubject" placeholder="Subject">
+<input id="paperYear" type="number" placeholder="Examination Year">
 <textarea id="paperDescription" placeholder="Description (optional)"></textarea>
-
 <label>Examination Paper PDF</label>
 <input id="paperFile" type="file" accept=".pdf,application/pdf">
-
 <label>Marking Scheme PDF (optional)</label>
 <input id="markingFile" type="file" accept=".pdf,application/pdf">
-
 <button class="full" id="paperUploadButton" onclick="uploadPastPaper()">Upload Past Paper</button>
 <p id="paperUploadMessage"></p>
 </div>
 
-<!-- ADMIN PAST PAPERS -->
 <div class="card">
 <h2>Manage Past Papers</h2>
-
-<input id="adminPaperSearch" placeholder="Search by title, course or subject..." oninput="renderPastPapers('adminPastPapers')">
-
+<input id="adminPaperSearch" placeholder="Search past papers..." oninput="renderPastPapers('adminPastPapers')">
 <select id="adminPaperSubject" onchange="renderPastPapers('adminPastPapers')">
 <option value="">All Subjects</option>
 </select>
-
 <select id="adminPaperYear" onchange="renderPastPapers('adminPastPapers')">
 <option value="">All Years</option>
 </select>
-
 <div id="adminPastPapers">Loading past papers...</div>
 <button class="secondary full" onclick="loadPastPapers('adminPastPapers')">Refresh Past Papers</button>
 </div>
 
-<!-- STUDENTS -->
+<!-- ONLINE EXAM ADMIN -->
+<div class="card">
+<h2>Online Examination Management</h2>
+<h3>Create Examination</h3>
+<input id="examTitle" placeholder="Examination Title">
+<input id="examCourse" value="Clinical Medicine" placeholder="Course">
+<input id="examSubject" placeholder="Subject">
+<input id="examDuration" type="number" min="1" value="30" placeholder="Duration in minutes">
+<textarea id="examDescription" placeholder="Examination Description"></textarea>
+<button class="full" onclick="createExam()">Create Examination</button>
+<p id="examAdminMessage"></p>
+
+<hr>
+<h3>Manage Examinations</h3>
+<div id="adminExams">Loading examinations...</div>
+
+<hr>
+<h3>Add Examination Questions</h3>
+<select id="questionExam">
+<option value="">Select Examination</option>
+</select>
+<textarea id="questionText" placeholder="Enter question"></textarea>
+<input id="optionA" placeholder="Option A">
+<input id="optionB" placeholder="Option B">
+<input id="optionC" placeholder="Option C">
+<input id="optionD" placeholder="Option D">
+<select id="correctOption">
+<option value="">Select Correct Answer</option>
+<option value="A">A</option>
+<option value="B">B</option>
+<option value="C">C</option>
+<option value="D">D</option>
+</select>
+<input id="questionMarks" type="number" min="1" value="1" placeholder="Marks">
+<button class="full" onclick="addExamQuestion()">Save Question</button>
+<p id="questionMessage"></p>
+
+<hr>
+<h3>Student Examination Results</h3>
+<div id="adminExamResults">No results loaded.</div>
+<button class="secondary full" onclick="loadExamResults()">Refresh Results</button>
+</div>
+
 <div class="card">
 <h2>Student Management</h2>
-
-<input id="studentAdminSearch" placeholder="Search student by name or email..." oninput="renderStudents()">
-
+<input id="studentAdminSearch" placeholder="Search student..." oninput="renderStudents()">
 <div id="studentList">Loading students...</div>
 <button class="secondary full" onclick="loadStudents()">Refresh Students</button>
 </div>
@@ -239,7 +236,6 @@ hr{border:0;border-top:1px solid #e2e8f0;margin:25px 0}
 <div class="card">
 <button class="secondary full" onclick="logout()">Logout</button>
 </div>
-
 </div>
 </div>
 
@@ -249,1034 +245,590 @@ hr{border:0;border-top:1px solid #e2e8f0;margin:25px 0}
 </footer>
 
 <script>
-
 // SUPABASE CONNECTION
 const SUPABASE_URL='https://gdvdwxvcyxzolagqmolp.supabase.co';
 const SUPABASE_KEY='sb_publishable_quWzIYk5v8p_9lRWBOp_VA_Ld72ox76';
-
 const BUCKET='Study_notes';
 const PAST_PAPERS_BUCKET='past_papers';
-
 const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
-let allMaterials=[];
-let allStudents=[];
-let allPastPapers=[];
+let allMaterials=[],allStudents=[],allPastPapers=[];
+let allExams=[];
+let activeAttempt=null;
+let activeExam=null;
+let examTimerInterval=null;
+let examDeadline=null;
+let currentQuestions=[];
 
-// SAFE FILE NAME
-function safeFileName(name){
- return name.replace(/[^a-zA-Z0-9._-]/g,'_');
-}
+function el(id){return document.getElementById(id)}
+function safeFileName(name){return name.replace(/[^a-zA-Z0-9._-]/g,'_')}
+function validPdf(file){return file&&(file.type==='application/pdf'||file.name.toLowerCase().endsWith('.pdf'))}
 
-// CHECK PDF
-function validPdf(file){
- return file && (
-  file.type==='application/pdf' ||
-  file.name.toLowerCase().endsWith('.pdf')
- );
-}
-
-// REGISTRATION
+// AUTHENTICATION
 async function register(){
-
- const fullName=document.getElementById('fullName').value.trim();
- const phone=document.getElementById('phone').value.trim();
- const email=document.getElementById('regEmail').value.trim();
- const password=document.getElementById('regPassword').value;
-
- if(!fullName||!phone||!email||!password){
-  alert('Please fill in all fields.');
-  return;
- }
-
- if(password.length<6){
-  alert('Password must contain at least 6 characters.');
-  return;
- }
-
- const {error}=await db.auth.signUp({
-  email,
-  password,
-  options:{
-   data:{full_name:fullName,phone:phone}
-  }
- });
-
- if(error){
-  alert(error.message);
-  return;
- }
-
+ const fullName=el('fullName').value.trim();
+ const phone=el('phone').value.trim();
+ const email=el('regEmail').value.trim();
+ const password=el('regPassword').value;
+ if(!fullName||!phone||!email||!password)return alert('Please fill in all fields.');
+ if(password.length<6)return alert('Password must contain at least 6 characters.');
+ const {error}=await db.auth.signUp({email,password,options:{data:{full_name:fullName,phone}}});
+ if(error)return alert(error.message);
  alert('Registration submitted. Your account is waiting for Admin approval.');
 }
 
-// LOGIN
 async function login(){
-
- const email=document.getElementById('loginEmail').value.trim();
- const password=document.getElementById('loginPassword').value;
- const output=document.getElementById('authMessage');
-
- if(!email||!password){
-  output.textContent='Enter email and password.';
-  return;
- }
-
- output.textContent='Logging in...';
-
+ const email=el('loginEmail').value.trim();
+ const password=el('loginPassword').value;
+ if(!email||!password){el('authMessage').textContent='Enter email and password.';return}
+ el('authMessage').textContent='Logging in...';
  const {data,error}=await db.auth.signInWithPassword({email,password});
-
- if(error){
-  output.textContent=error.message;
-  return;
- }
-
+ if(error){el('authMessage').textContent=error.message;return}
  await showDashboard(data.user);
 }
 
-// DASHBOARD
 async function showDashboard(user){
-
- const {data:profile,error}=await db
-  .from('profiles')
-  .select('id,email,full_name,phone,role,approval_status')
-  .eq('id',user.id)
-  .maybeSingle();
+ const {data:profile,error}=await db.from('profiles')
+ .select('id,email,full_name,phone,role,approval_status')
+ .eq('id',user.id).maybeSingle();
 
  if(error||!profile){
-  alert('Profile not found: '+(error?.message||'Please contact Admin.'));
-  await db.auth.signOut();
-  location.reload();
-  return;
+  alert('Profile not found: '+(error?.message||'Contact Admin.'));
+  await db.auth.signOut();location.reload();return;
  }
 
  if(profile.role==='admin'){
-
-  document.getElementById('authArea').classList.add('hidden');
-  document.getElementById('studentArea').classList.add('hidden');
-  document.getElementById('adminArea').classList.remove('hidden');
-
+  el('authArea').classList.add('hidden');
+  el('studentArea').classList.add('hidden');
+  el('adminArea').classList.remove('hidden');
   await loadStatistics();
   await loadStudents();
   await loadMaterials('adminMaterials');
   await loadPastPapers('adminPastPapers');
+  await loadExams();
   return;
  }
 
  if(profile.approval_status!=='approved'){
-
   await db.auth.signOut();
-  document.getElementById('authArea').classList.remove('hidden');
-
-  document.getElementById('authMessage').textContent=
-   profile.approval_status==='rejected'
+  el('authArea').classList.remove('hidden');
+  el('authMessage').textContent=profile.approval_status==='rejected'
    ?'Your registration was rejected. Contact Admin.'
-   :'Your account is pending approval. Please wait.';
-
+   :'Your account is pending approval.';
   return;
  }
 
- document.getElementById('authArea').classList.add('hidden');
- document.getElementById('adminArea').classList.add('hidden');
- document.getElementById('studentArea').classList.remove('hidden');
-
- document.getElementById('studentName').textContent=profile.full_name||'Student';
- document.getElementById('studentEmail').textContent='Email: '+(profile.email||user.email);
- document.getElementById('studentPhone').textContent='Phone: '+(profile.phone||'Not provided');
-
+ el('authArea').classList.add('hidden');
+ el('adminArea').classList.add('hidden');
+ el('studentArea').classList.remove('hidden');
+ el('studentName').textContent=profile.full_name||'Student';
+ el('studentEmail').textContent='Email: '+(profile.email||user.email);
+ el('studentPhone').textContent='Phone: '+(profile.phone||'Not provided');
  await loadMaterials('studentMaterials');
  await loadPastPapers('studentPastPapers');
+ await loadStudentExams();
 }
 
 // STATISTICS
 async function loadStatistics(){
-
- const total=await db.from('profiles')
-  .select('id',{count:'exact',head:true})
-  .eq('role','student');
-
- const approved=await db.from('profiles')
-  .select('id',{count:'exact',head:true})
-  .eq('role','student')
-  .eq('approval_status','approved');
-
- const pending=await db.from('profiles')
-  .select('id',{count:'exact',head:true})
-  .eq('role','student')
-  .eq('approval_status','pending');
-
- const materials=await db.from('study_materials')
-  .select('id',{count:'exact',head:true});
-
- const papers=await db.from('past_papers')
-  .select('id',{count:'exact',head:true});
-
- document.getElementById('totalStudents').textContent=
-  total.error?'Error':total.count??0;
-
- document.getElementById('approvedStudents').textContent=
-  approved.error?'Error':approved.count??0;
-
- document.getElementById('pendingStudents').textContent=
-  pending.error?'Error':pending.count??0;
-
- document.getElementById('totalMaterials').textContent=
-  materials.error?'Error':materials.count??0;
-
- document.getElementById('totalPastPapers').textContent=
-  papers.error?'Error':papers.count??0;
+ const queries=[
+  db.from('profiles').select('id',{count:'exact',head:true}).eq('role','student'),
+  db.from('profiles').select('id',{count:'exact',head:true}).eq('role','student').eq('approval_status','approved'),
+  db.from('profiles').select('id',{count:'exact',head:true}).eq('role','student').eq('approval_status','pending'),
+  db.from('study_materials').select('id',{count:'exact',head:true}),
+  db.from('past_papers').select('id',{count:'exact',head:true})
+ ];
+ const results=await Promise.all(queries);
+ ['totalStudents','approvedStudents','pendingStudents','totalMaterials','totalPastPapers']
+ .forEach((id,i)=>el(id).textContent=results[i].error?'Error':results[i].count??0);
 }
 
-// UPLOAD STUDY NOTES
-async function uploadMaterial(){
-
- const title=document.getElementById('materialTitle').value.trim();
- const subject=document.getElementById('materialSubject').value.trim();
- const description=document.getElementById('materialDescription').value.trim();
- const file=document.getElementById('materialFile').files[0];
-
- const button=document.getElementById('uploadButton');
- const output=document.getElementById('uploadMessage');
-
- if(!title||!subject||!file){
-  output.textContent='Enter title, subject and choose a PDF file.';
-  return;
- }
-
- if(!validPdf(file)){
-  output.textContent='Only PDF files are allowed.';
-  return;
- }
-
- if(file.size>20*1024*1024){
-  output.textContent='File is too large. Maximum size is 20 MB.';
-  return;
- }
-
- button.disabled=true;
- output.textContent='Uploading PDF...';
-
- try{
-
-  const {data:sessionData}=await db.auth.getSession();
-  const user=sessionData.session?.user;
-
-  if(!user){
-   output.textContent='Please login again.';
-   return;
-  }
-
-  const filePath=user.id+'/'+Date.now()+'-'+safeFileName(file.name);
-
-  const {error:uploadError}=await db.storage.from(BUCKET).upload(
-   filePath,file,{contentType:'application/pdf',upsert:false}
-  );
-
-  if(uploadError){
-   output.textContent='Upload failed: '+uploadError.message;
-   return;
-  }
-
-  const {error:insertError}=await db.from('study_materials').insert({
-   title,subject,description,file_path:filePath,created_by:user.id
-  });
-
-  if(insertError){
-   await db.storage.from(BUCKET).remove([filePath]);
-   output.textContent='Database error: '+insertError.message;
-   return;
-  }
-
-  output.textContent='PDF uploaded successfully!';
-
-  document.getElementById('materialTitle').value='';
-  document.getElementById('materialSubject').value='';
-  document.getElementById('materialDescription').value='';
-  document.getElementById('materialFile').value='';
-
-  await loadMaterials('adminMaterials');
-  await loadStatistics();
-
- }catch(error){
-  output.textContent='Unexpected error: '+error.message;
- }finally{
-  button.disabled=false;
- }
-}
-
-// LOAD MATERIALS
-async function loadMaterials(target){
-
- const area=document.getElementById(target);
- area.textContent='Loading study materials...';
-
- const {data,error}=await db.from('study_materials')
-  .select('id,title,subject,description,file_path,created_at')
-  .order('created_at',{ascending:false});
-
- if(error){
-  area.textContent='Unable to load materials: '+error.message;
-  return;
- }
-
- allMaterials=data||[];
- updateSubjectFilters();
- renderMaterials(target);
-}
-
-// SUBJECT FILTERS
-function updateSubjectFilters(){
-
- const subjects=[...new Set(allMaterials.map(item=>item.subject).filter(Boolean))].sort();
-
- ['adminSubject','studentSubject'].forEach(id=>{
-
-  const select=document.getElementById(id);
-  const oldValue=select.value;
-
-  select.innerHTML='<option value="">All Subjects</option>';
-
-  subjects.forEach(subject=>{
-   const option=document.createElement('option');
-   option.value=subject;
-   option.textContent=subject;
-   select.appendChild(option);
-  });
-
-  if(subjects.includes(oldValue))select.value=oldValue;
- });
-}
-
-// RENDER MATERIALS
-function renderMaterials(target){
-
- const area=document.getElementById(target);
- const isAdmin=target==='adminMaterials';
-
- const search=document.getElementById(isAdmin?'adminSearch':'studentSearch')
-  .value.trim().toLowerCase();
-
- const subjectFilter=document.getElementById(isAdmin?'adminSubject':'studentSubject').value;
-
- const filtered=allMaterials.filter(item=>{
-  const text=(item.title+' '+item.subject+' '+(item.description||'')).toLowerCase();
-  return text.includes(search)&&(!subjectFilter||item.subject===subjectFilter);
- });
-
- if(filtered.length===0){
-  area.textContent='No study materials found.';
-  return;
- }
-
- area.innerHTML='';
-
- filtered.forEach(item=>{
-
-  const box=document.createElement('div');
-  box.className='material';
-
-  const heading=document.createElement('h3');
-  heading.textContent=item.title;
-
-  const subject=document.createElement('p');
-  subject.textContent='Subject: '+item.subject;
-
-  const description=document.createElement('p');
-  description.textContent=item.description||'No description provided.';
-
-  const openButton=document.createElement('button');
-  openButton.textContent='Open / Download PDF';
-
-  openButton.onclick=()=>openPrivatePdf(BUCKET,item.file_path,openButton);
-
-  box.append(heading,subject,description,openButton);
-
-  if(isAdmin){
-
-   const editButton=document.createElement('button');
-   editButton.textContent='Edit Material';
-   editButton.className='success';
-   editButton.onclick=()=>editMaterial(item);
-
-   const deleteButton=document.createElement('button');
-   deleteButton.textContent='Delete PDF';
-   deleteButton.className='danger';
-   deleteButton.onclick=()=>deleteMaterial(item.id,item.file_path);
-
-   box.append(editButton,deleteButton);
-  }
-
-  area.appendChild(box);
- });
-}
-
-// OPEN PRIVATE PDF
+// PRIVATE PDF
 async function openPrivatePdf(bucket,path,button){
-
- if(button){
-  button.disabled=true;
-  button.textContent='Preparing PDF...';
- }
-
+ if(button){button.disabled=true;button.textContent='Preparing PDF...'}
  try{
-
   const {data,error}=await db.storage.from(bucket).createSignedUrl(path,300);
-
-  if(error){
-   alert('Unable to open PDF: '+error.message);
-   return;
-  }
-
-  const link=document.createElement('a');
-  link.href=data.signedUrl;
-  link.target='_blank';
-  link.rel='noopener';
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-
- }catch(error){
-  alert('Error opening PDF: '+error.message);
- }finally{
-  if(button){
-   button.disabled=false;
-   button.textContent='Open / Download PDF';
-  }
- }
+  if(error){alert('Unable to open PDF: '+error.message);return}
+  window.open(data.signedUrl,'_blank','noopener');
+ }catch(error){alert(error.message)}
+ finally{if(button){button.disabled=false;button.textContent='Open / Download PDF'}}
 }
 
-// EDIT STUDY MATERIAL
-async function editMaterial(item){
-
- const newTitle=prompt('Enter new material title:',item.title);
- if(newTitle===null)return;
-
- const newSubject=prompt('Enter new subject:',item.subject);
- if(newSubject===null)return;
-
- const newDescription=prompt('Enter new description:',item.description||'');
- if(newDescription===null)return;
-
- if(!newTitle.trim()||!newSubject.trim()){
-  alert('Title and subject cannot be empty.');
-  return;
- }
-
- const {error}=await db.from('study_materials')
-  .update({
-   title:newTitle.trim(),
-   subject:newSubject.trim(),
-   description:newDescription.trim()
-  })
-  .eq('id',item.id);
-
- if(error){
-  alert('Update failed: '+error.message);
-  return;
- }
-
- alert('Material updated successfully!');
- await loadMaterials('adminMaterials');
- await loadStatistics();
-}
-
-// DELETE STUDY MATERIAL
-async function deleteMaterial(id,filePath){
-
- if(!confirm('Are you sure you want to permanently delete this PDF?'))return;
-
- const {data:sessionData}=await db.auth.getSession();
-
- if(!sessionData.session){
-  alert('Please login again.');
-  return;
- }
-
- const {error:storageError}=await db.storage.from(BUCKET).remove([filePath]);
-
- if(storageError){
-  alert('PDF deletion failed: '+storageError.message);
-  return;
- }
-
- const {error:databaseError}=await db.from('study_materials')
-  .delete().eq('id',id);
-
- if(databaseError){
-  alert('PDF file was removed but database deletion failed: '+databaseError.message);
-  return;
- }
-
- alert('PDF deleted successfully!');
- await loadMaterials('adminMaterials');
- await loadStatistics();
-}
-
-// ======================================
-// PAST PAPERS SYSTEM
-// ======================================
-
-// UPLOAD PAST PAPER
-async function uploadPastPaper(){
-
- const title=document.getElementById('paperTitle').value.trim();
- const course=document.getElementById('paperCourse').value.trim();
- const subject=document.getElementById('paperSubject').value.trim();
- const yearValue=document.getElementById('paperYear').value;
- const description=document.getElementById('paperDescription').value.trim();
-
- const paperFile=document.getElementById('paperFile').files[0];
- const markingFile=document.getElementById('markingFile').files[0];
-
- const button=document.getElementById('paperUploadButton');
- const output=document.getElementById('paperUploadMessage');
-
- if(!title||!course||!subject||!paperFile){
-  output.textContent='Please enter title, course, subject and examination PDF.';
-  return;
- }
-
- if(!validPdf(paperFile)){
-  output.textContent='Examination file must be a PDF.';
-  return;
- }
-
- if(markingFile&&!validPdf(markingFile)){
-  output.textContent='Marking scheme must be a PDF.';
-  return;
- }
-
- if(paperFile.size>20*1024*1024){
-  output.textContent='Examination PDF exceeds 20 MB.';
-  return;
- }
-
- if(markingFile&&markingFile.size>20*1024*1024){
-  output.textContent='Marking Scheme PDF exceeds 20 MB.';
-  return;
- }
-
- let year=null;
-
- if(yearValue){
-  year=Number(yearValue);
-
-  if(!Number.isInteger(year)||year<1900||year>2100){
-   output.textContent='Please enter a valid examination year.';
-   return;
-  }
- }
-
- button.disabled=true;
- output.textContent='Uploading examination paper...';
-
- let uploadedPaths=[];
-
+// STUDY MATERIALS
+async function uploadMaterial(){
+ const title=el('materialTitle').value.trim();
+ const subject=el('materialSubject').value.trim();
+ const description=el('materialDescription').value.trim();
+ const file=el('materialFile').files[0];
+ const output=el('uploadMessage');
+ const button=el('uploadButton');
+ if(!title||!subject||!file){output.textContent='Enter title, subject and choose PDF.';return}
+ if(!validPdf(file)){output.textContent='Only PDF files allowed.';return}
+ if(file.size>20*1024*1024){output.textContent='Maximum file size is 20 MB.';return}
+ button.disabled=true;output.textContent='Uploading...';
+ let path=null;
  try{
-
-  const {data:sessionData}=await db.auth.getSession();
-  const user=sessionData.session?.user;
-
-  if(!user){
-   output.textContent='Please login again.';
-   return;
-  }
-
-  const folder=user.id+'/'+Date.now();
-
-  const paperPath=folder+'/paper-'+safeFileName(paperFile.name);
-
-  const {error:paperError}=await db.storage
-   .from(PAST_PAPERS_BUCKET)
-   .upload(paperPath,paperFile,{
-    contentType:'application/pdf',
-    upsert:false
-   });
-
-  if(paperError){
-   output.textContent='Paper upload failed: '+paperError.message;
-   return;
-  }
-
-  uploadedPaths.push(paperPath);
-
-  let markingPath=null;
-
-  if(markingFile){
-
-   output.textContent='Uploading marking scheme...';
-
-   markingPath=folder+'/marking-'+safeFileName(markingFile.name);
-
-   const {error:markingError}=await db.storage
-    .from(PAST_PAPERS_BUCKET)
-    .upload(markingPath,markingFile,{
-     contentType:'application/pdf',
-     upsert:false
-    });
-
-   if(markingError){
-
-    await db.storage.from(PAST_PAPERS_BUCKET).remove(uploadedPaths);
-
-    output.textContent='Marking scheme upload failed: '+markingError.message;
-    return;
-   }
-
-   uploadedPaths.push(markingPath);
-  }
-
-  output.textContent='Saving examination details...';
-
-  const {error:insertError}=await db.from('past_papers').insert({
-   title:title,
-   course:course,
-   subject:subject,
-   exam_year:year,
-   description:description,
-   paper_file_path:paperPath,
-   marking_scheme_path:markingPath,
-   created_by:user.id
+  const {data:s}=await db.auth.getSession();
+  if(!s.session){output.textContent='Please login again.';return}
+  path=s.session.user.id+'/'+Date.now()+'-'+safeFileName(file.name);
+  const {error}=await db.storage.from(BUCKET).upload(path,file,{contentType:'application/pdf'});
+  if(error){output.textContent=error.message;return}
+  const {error:insertError}=await db.from('study_materials').insert({
+   title,subject,description,file_path:path,created_by:s.session.user.id
   });
-
-  if(insertError){
-
-   await db.storage.from(PAST_PAPERS_BUCKET).remove(uploadedPaths);
-
-   output.textContent='Database error: '+insertError.message;
-   return;
-  }
-
-  output.textContent='Past Paper uploaded successfully!';
-
-  document.getElementById('paperTitle').value='';
-  document.getElementById('paperCourse').value='Clinical Medicine';
-  document.getElementById('paperSubject').value='';
-  document.getElementById('paperYear').value='';
-  document.getElementById('paperDescription').value='';
-  document.getElementById('paperFile').value='';
-  document.getElementById('markingFile').value='';
-
-  await loadPastPapers('adminPastPapers');
-  await loadStatistics();
-
- }catch(error){
-
-  if(uploadedPaths.length){
-   await db.storage.from(PAST_PAPERS_BUCKET).remove(uploadedPaths);
-  }
-
-  output.textContent='Unexpected error: '+error.message;
-
- }finally{
-  button.disabled=false;
- }
+  if(insertError){await db.storage.from(BUCKET).remove([path]);output.textContent=insertError.message;return}
+  output.textContent='PDF uploaded successfully!';
+  ['materialTitle','materialSubject','materialDescription','materialFile'].forEach(id=>el(id).value='');
+  await loadMaterials('adminMaterials');await loadStatistics();
+ }catch(e){output.textContent=e.message}
+ finally{button.disabled=false}
 }
 
-// LOAD PAST PAPERS
-async function loadPastPapers(target){
-
- const area=document.getElementById(target);
- area.textContent='Loading past papers...';
-
- const {data,error}=await db.from('past_papers')
-  .select('id,title,course,subject,exam_year,description,paper_file_path,marking_scheme_path,created_at')
-  .order('created_at',{ascending:false});
-
- if(error){
-  area.textContent='Unable to load past papers: '+error.message;
-  return;
- }
-
- allPastPapers=data||[];
-
- updatePastPaperFilters();
- renderPastPapers(target);
+async function loadMaterials(target){
+ const area=el(target);area.textContent='Loading...';
+ const {data,error}=await db.from('study_materials')
+ .select('id,title,subject,description,file_path,created_at').order('created_at',{ascending:false});
+ if(error){area.textContent=error.message;return}
+ allMaterials=data||[];updateSubjectFilters();renderMaterials(target);
 }
 
-// UPDATE PAST PAPER FILTERS
-function updatePastPaperFilters(){
-
- const subjects=[...new Set(allPastPapers.map(p=>p.subject).filter(Boolean))].sort();
- const years=[...new Set(allPastPapers.map(p=>p.exam_year).filter(Boolean))].sort((a,b)=>b-a);
-
- [
-  'adminPaperSubject',
-  'studentPaperSubject'
- ].forEach(id=>{
-
-  const select=document.getElementById(id);
-  const oldValue=select.value;
-
-  select.innerHTML='<option value="">All Subjects</option>';
-
-  subjects.forEach(subject=>{
-   const option=document.createElement('option');
-   option.value=subject;
-   option.textContent=subject;
-   select.appendChild(option);
-  });
-
-  if(subjects.includes(oldValue))select.value=oldValue;
- });
-
- [
-  'adminPaperYear',
-  'studentPaperYear'
- ].forEach(id=>{
-
-  const select=document.getElementById(id);
-  const oldValue=select.value;
-
-  select.innerHTML='<option value="">All Years</option>';
-
-  years.forEach(year=>{
-   const option=document.createElement('option');
-   option.value=year;
-   option.textContent=year;
-   select.appendChild(option);
-  });
-
-  if(years.map(String).includes(oldValue))select.value=oldValue;
+function updateSubjectFilters(){
+ const subjects=[...new Set(allMaterials.map(x=>x.subject).filter(Boolean))].sort();
+ ['adminSubject','studentSubject'].forEach(id=>{
+  const s=el(id),old=s.value;s.innerHTML='<option value="">All Subjects</option>';
+  subjects.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;s.appendChild(o)});
+  if(subjects.includes(old))s.value=old;
  });
 }
 
-// DISPLAY PAST PAPERS
-function renderPastPapers(target){
-
- const area=document.getElementById(target);
- const isAdmin=target==='adminPastPapers';
-
- const search=document.getElementById(
-  isAdmin?'adminPaperSearch':'studentPaperSearch'
- ).value.trim().toLowerCase();
-
- const subjectFilter=document.getElementById(
-  isAdmin?'adminPaperSubject':'studentPaperSubject'
- ).value;
-
- const yearFilter=document.getElementById(
-  isAdmin?'adminPaperYear':'studentPaperYear'
- ).value;
-
- const filtered=allPastPapers.filter(paper=>{
-
-  const text=(
-   paper.title+' '+
-   paper.course+' '+
-   paper.subject+' '+
-   (paper.description||'')+' '+
-   (paper.exam_year||'')
-  ).toLowerCase();
-
-  return text.includes(search)&&
-   (!subjectFilter||paper.subject===subjectFilter)&&
-   (!yearFilter||String(paper.exam_year)===yearFilter);
- });
-
- if(filtered.length===0){
-  area.textContent='No past papers found.';
-  return;
- }
-
+function renderMaterials(target){
+ const area=el(target),admin=target==='adminMaterials';
+ const search=el(admin?'adminSearch':'studentSearch').value.toLowerCase().trim();
+ const filter=el(admin?'adminSubject':'studentSubject').value;
+ const list=allMaterials.filter(x=>(x.title+' '+x.subject+' '+(x.description||'')).toLowerCase().includes(search)&&(!filter||x.subject===filter));
  area.innerHTML='';
-
- filtered.forEach(paper=>{
-
-  const box=document.createElement('div');
-  box.className='material';
-
-  const heading=document.createElement('h3');
-  heading.textContent=paper.title;
-
-  const course=document.createElement('p');
-  course.textContent='Course: '+paper.course;
-
-  const subject=document.createElement('p');
-  subject.textContent='Subject: '+paper.subject;
-
-  const year=document.createElement('p');
-  year.textContent='Examination Year: '+(paper.exam_year||'Not specified');
-
-  const description=document.createElement('p');
-  description.textContent=paper.description||'No description provided.';
-
-  const paperButton=document.createElement('button');
-  paperButton.textContent='Open / Download Examination PDF';
-  paperButton.onclick=()=>openPrivatePdf(
-   PAST_PAPERS_BUCKET,
-   paper.paper_file_path,
-   paperButton
-  );
-
-  box.append(heading,course,subject,year,description,paperButton);
-
-  if(paper.marking_scheme_path){
-
-   const markingButton=document.createElement('button');
-   markingButton.textContent='Open / Download Marking Scheme';
-   markingButton.className='success';
-
-   markingButton.onclick=()=>openPrivatePdf(
-    PAST_PAPERS_BUCKET,
-    paper.marking_scheme_path,
-    markingButton
-   );
-
-   box.appendChild(markingButton);
-
-  }else{
-
-   const noMarking=document.createElement('p');
-   noMarking.className='section-note';
-   noMarking.textContent='Marking scheme has not been uploaded.';
-   box.appendChild(noMarking);
+ if(!list.length){area.textContent='No study materials found.';return}
+ list.forEach(item=>{
+  const box=document.createElement('div');box.className='material';
+  const h=document.createElement('h3');h.textContent=item.title;
+  const p=document.createElement('p');p.textContent='Subject: '+item.subject;
+  const d=document.createElement('p');d.textContent=item.description||'No description.';
+  const open=document.createElement('button');open.textContent='Open / Download PDF';
+  open.onclick=()=>openPrivatePdf(BUCKET,item.file_path,open);
+  box.append(h,p,d,open);
+  if(admin){
+   const edit=document.createElement('button');edit.textContent='Edit Material';edit.className='success';edit.onclick=()=>editMaterial(item);
+   const del=document.createElement('button');del.textContent='Delete PDF';del.className='danger';del.onclick=()=>deleteMaterial(item.id,item.file_path);
+   box.append(edit,del);
   }
-
-  if(isAdmin){
-
-   const editButton=document.createElement('button');
-   editButton.textContent='Edit Past Paper';
-   editButton.className='secondary';
-   editButton.onclick=()=>editPastPaper(paper);
-
-   const deleteButton=document.createElement('button');
-   deleteButton.textContent='Delete Past Paper';
-   deleteButton.className='danger';
-   deleteButton.onclick=()=>deletePastPaper(paper);
-
-   box.append(editButton,deleteButton);
-  }
-
   area.appendChild(box);
  });
 }
 
-// EDIT PAST PAPER DETAILS
-async function editPastPaper(paper){
+async function editMaterial(item){
+ const title=prompt('New title:',item.title);if(title===null)return;
+ const subject=prompt('New subject:',item.subject);if(subject===null)return;
+ const description=prompt('New description:',item.description||'');if(description===null)return;
+ if(!title.trim()||!subject.trim())return alert('Title and subject required.');
+ const {error}=await db.from('study_materials').update({title:title.trim(),subject:subject.trim(),description:description.trim()}).eq('id',item.id);
+ if(error)return alert(error.message);
+ alert('Material updated!');await loadMaterials('adminMaterials');
+}
+async function deleteMaterial(id,path){
+ if(!confirm('Permanently delete this PDF?'))return;
+ const {error}=await db.storage.from(BUCKET).remove([path]);
+ if(error)return alert(error.message);
+ const {error:e}=await db.from('study_materials').delete().eq('id',id);
+ if(e)return alert(e.message);
+ alert('PDF deleted!');await loadMaterials('adminMaterials');await loadStatistics();
+}
 
- const title=prompt('Examination title:',paper.title);
- if(title===null)return;
-
- const course=prompt('Course:',paper.course);
- if(course===null)return;
-
- const subject=prompt('Subject:',paper.subject);
- if(subject===null)return;
-
- const yearText=prompt(
-  'Examination year:',
-  paper.exam_year||''
- );
-
- if(yearText===null)return;
-
- const description=prompt(
-  'Description:',
-  paper.description||''
- );
-
- if(description===null)return;
-
- if(!title.trim()||!course.trim()||!subject.trim()){
-  alert('Title, course and subject cannot be empty.');
-  return;
- }
-
+// PAST PAPERS
+async function uploadPastPaper(){
+ const title=el('paperTitle').value.trim(),course=el('paperCourse').value.trim();
+ const subject=el('paperSubject').value.trim(),yearText=el('paperYear').value;
+ const description=el('paperDescription').value.trim();
+ const paper=el('paperFile').files[0],marking=el('markingFile').files[0];
+ const out=el('paperUploadMessage'),btn=el('paperUploadButton');
+ if(!title||!course||!subject||!paper){out.textContent='Fill required fields and select paper PDF.';return}
+ if(!validPdf(paper)||(marking&&!validPdf(marking))){out.textContent='Files must be PDFs.';return}
+ if(paper.size>20*1024*1024||(marking&&marking.size>20*1024*1024)){out.textContent='Maximum file size is 20 MB each.';return}
  let year=null;
-
- if(yearText.trim()){
-  year=Number(yearText);
-
-  if(!Number.isInteger(year)||year<1900||year>2100){
-   alert('Please enter a valid examination year.');
-   return;
+ if(yearText){year=Number(yearText);if(!Number.isInteger(year)||year<1900||year>2100){out.textContent='Invalid year.';return}}
+ btn.disabled=true;out.textContent='Uploading...';
+ let paths=[];
+ try{
+  const {data:s}=await db.auth.getSession();if(!s.session){out.textContent='Login again.';return}
+  const folder=s.session.user.id+'/'+Date.now();
+  const paperPath=folder+'/paper-'+safeFileName(paper.name);
+  let {error}=await db.storage.from(PAST_PAPERS_BUCKET).upload(paperPath,paper,{contentType:'application/pdf'});
+  if(error){out.textContent=error.message;return}paths.push(paperPath);
+  let markingPath=null;
+  if(marking){
+   markingPath=folder+'/marking-'+safeFileName(marking.name);
+   const r=await db.storage.from(PAST_PAPERS_BUCKET).upload(markingPath,marking,{contentType:'application/pdf'});
+   if(r.error){await db.storage.from(PAST_PAPERS_BUCKET).remove(paths);out.textContent=r.error.message;return}
+   paths.push(markingPath);
   }
- }
-
- const {error}=await db.from('past_papers')
-  .update({
-   title:title.trim(),
-   course:course.trim(),
-   subject:subject.trim(),
-   exam_year:year,
-   description:description.trim()
-  })
-  .eq('id',paper.id);
-
- if(error){
-  alert('Past Paper update failed: '+error.message);
-  return;
- }
-
- alert('Past Paper updated successfully!');
- await loadPastPapers('adminPastPapers');
- await loadStatistics();
+  const {error:dbError}=await db.from('past_papers').insert({
+   title,course,subject,exam_year:year,description,
+   paper_file_path:paperPath,marking_scheme_path:markingPath,created_by:s.session.user.id
+  });
+  if(dbError){await db.storage.from(PAST_PAPERS_BUCKET).remove(paths);out.textContent=dbError.message;return}
+  out.textContent='Past Paper uploaded successfully!';
+  ['paperTitle','paperSubject','paperYear','paperDescription','paperFile','markingFile'].forEach(id=>el(id).value='');
+  el('paperCourse').value='Clinical Medicine';
+  await loadPastPapers('adminPastPapers');await loadStatistics();
+ }catch(e){out.textContent=e.message}
+ finally{btn.disabled=false}
 }
 
-// DELETE PAST PAPER AND ITS FILES
-async function deletePastPaper(paper){
-
- if(!confirm(
-  'Are you sure you want to permanently delete this Past Paper and its Marking Scheme?'
- ))return;
-
- const paths=[paper.paper_file_path];
-
- if(paper.marking_scheme_path){
-  paths.push(paper.marking_scheme_path);
- }
-
- const {error:storageError}=await db.storage
-  .from(PAST_PAPERS_BUCKET)
-  .remove(paths);
-
- if(storageError){
-  alert('File deletion failed: '+storageError.message);
-  return;
- }
-
- const {error:databaseError}=await db.from('past_papers')
-  .delete()
-  .eq('id',paper.id);
-
- if(databaseError){
-  alert('Files were removed but database deletion failed: '+databaseError.message);
-  return;
- }
-
- alert('Past Paper deleted successfully!');
-
- await loadPastPapers('adminPastPapers');
- await loadStatistics();
+async function loadPastPapers(target){
+ const area=el(target);area.textContent='Loading...';
+ const {data,error}=await db.from('past_papers')
+ .select('id,title,course,subject,exam_year,description,paper_file_path,marking_scheme_path,created_at')
+ .order('created_at',{ascending:false});
+ if(error){area.textContent=error.message;return}
+ allPastPapers=data||[];updatePaperFilters();renderPastPapers(target);
 }
-
-// LOAD STUDENTS
-async function loadStudents(){
-
- const area=document.getElementById('studentList');
- area.textContent='Loading students...';
-
- const {data,error}=await db.from('profiles')
-  .select('id,full_name,email,phone,approval_status')
-  .eq('role','student')
-  .order('created_at',{ascending:false});
-
- if(error){
-  area.textContent='Unable to load students: '+error.message;
-  return;
- }
-
- allStudents=data||[];
- renderStudents();
- await loadStatistics();
-}
-
-// SEARCH AND DISPLAY STUDENTS
-function renderStudents(){
-
- const area=document.getElementById('studentList');
-
- const search=document.getElementById('studentAdminSearch')
-  .value.trim().toLowerCase();
-
- const filtered=allStudents.filter(student=>{
-  const text=(student.full_name||'')+' '+(student.email||'');
-  return text.toLowerCase().includes(search);
+function updatePaperFilters(){
+ const subjects=[...new Set(allPastPapers.map(x=>x.subject).filter(Boolean))].sort();
+ const years=[...new Set(allPastPapers.map(x=>x.exam_year).filter(Boolean))].sort((a,b)=>b-a);
+ ['adminPaperSubject','studentPaperSubject'].forEach(id=>{
+  const s=el(id),old=s.value;s.innerHTML='<option value="">All Subjects</option>';
+  subjects.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;s.appendChild(o)});
+  if(subjects.includes(old))s.value=old;
  });
-
- if(filtered.length===0){
-  area.textContent='No students found.';
-  return;
- }
-
+ ['adminPaperYear','studentPaperYear'].forEach(id=>{
+  const s=el(id),old=s.value;s.innerHTML='<option value="">All Years</option>';
+  years.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;s.appendChild(o)});
+  if(years.map(String).includes(old))s.value=old;
+ });
+}
+function renderPastPapers(target){
+ const area=el(target),admin=target==='adminPastPapers';
+ const search=el(admin?'adminPaperSearch':'studentPaperSearch').value.toLowerCase().trim();
+ const subject=el(admin?'adminPaperSubject':'studentPaperSubject').value;
+ const year=el(admin?'adminPaperYear':'studentPaperYear').value;
+ const list=allPastPapers.filter(p=>(p.title+' '+p.course+' '+p.subject+' '+(p.exam_year||'')+' '+(p.description||'')).toLowerCase().includes(search)&&(!subject||p.subject===subject)&&(!year||String(p.exam_year)===year));
  area.innerHTML='';
-
- filtered.forEach(student=>{
-
-  const row=document.createElement('div');
-  row.className='material';
-
-  const name=document.createElement('strong');
-  name.textContent=student.full_name||'Student';
-
-  const email=document.createElement('p');
-  email.textContent=student.email||'';
-
-  const phone=document.createElement('p');
-  phone.textContent='Phone: '+(student.phone||'Not provided');
-
-  const currentStatus=student.approval_status||'pending';
-
-  const status=document.createElement('p');
-  status.textContent='Status: '+currentStatus.toUpperCase();
-
-  const badge=document.createElement('span');
-  badge.className='status '+currentStatus;
-  badge.textContent=currentStatus.toUpperCase();
-
-  row.append(name,email,phone,status,badge);
-
-  if(currentStatus!=='approved'){
-
-   const approve=document.createElement('button');
-   approve.textContent='Approve';
-   approve.className='success';
-   approve.onclick=()=>changeApproval(student.id,'approved');
-   row.appendChild(approve);
+ if(!list.length){area.textContent='No past papers found.';return}
+ list.forEach(p=>{
+  const box=document.createElement('div');box.className='material';
+  const h=document.createElement('h3');h.textContent=p.title;
+  const info=document.createElement('p');info.textContent='Course: '+p.course+' | Subject: '+p.subject+' | Year: '+(p.exam_year||'Not specified');
+  const open=document.createElement('button');open.textContent='Open / Download Examination PDF';open.onclick=()=>openPrivatePdf(PAST_PAPERS_BUCKET,p.paper_file_path,open);
+  box.append(h,info,open);
+  if(p.marking_scheme_path){const m=document.createElement('button');m.className='success';m.textContent='Open / Download Marking Scheme';m.onclick=()=>openPrivatePdf(PAST_PAPERS_BUCKET,p.marking_scheme_path,m);box.appendChild(m)}
+  else{const n=document.createElement('p');n.textContent='Marking scheme has not been uploaded.';box.appendChild(n)}
+  if(admin){
+   const edit=document.createElement('button');edit.textContent='Edit Past Paper';edit.onclick=()=>editPastPaper(p);
+   const del=document.createElement('button');del.className='danger';del.textContent='Delete Past Paper';del.onclick=()=>deletePastPaper(p);
+   box.append(edit,del);
   }
-
-  if(currentStatus!=='rejected'){
-
-   const reject=document.createElement('button');
-   reject.textContent='Reject';
-   reject.className='danger';
-   reject.onclick=()=>changeApproval(student.id,'rejected');
-   row.appendChild(reject);
-  }
-
-  area.appendChild(row);
+  area.appendChild(box);
  });
 }
+async function editPastPaper(p){
+ const title=prompt('Title:',p.title);if(title===null)return;
+ const course=prompt('Course:',p.course);if(course===null)return;
+ const subject=prompt('Subject:',p.subject);if(subject===null)return;
+ const y=prompt('Year:',p.exam_year||'');if(y===null)return;
+ const description=prompt('Description:',p.description||'');if(description===null)return;
+ const year=y.trim()?Number(y):null;
+ if(!title.trim()||!course.trim()||!subject.trim()||(year!==null&&(!Number.isInteger(year)||year<1900||year>2100)))return alert('Check the entered details.');
+ const {error}=await db.from('past_papers').update({title:title.trim(),course:course.trim(),subject:subject.trim(),exam_year:year,description}).eq('id',p.id);
+ if(error)return alert(error.message);
+ alert('Past Paper updated!');await loadPastPapers('adminPastPapers');
+}
+async function deletePastPaper(p){
+ if(!confirm('Delete this Past Paper and its Marking Scheme?'))return;
+ const paths=[p.paper_file_path];if(p.marking_scheme_path)paths.push(p.marking_scheme_path);
+ const {error}=await db.storage.from(PAST_PAPERS_BUCKET).remove(paths);
+ if(error)return alert(error.message);
+ const {error:e}=await db.from('past_papers').delete().eq('id',p.id);
+ if(e)return alert(e.message);
+ alert('Past Paper deleted!');await loadPastPapers('adminPastPapers');await loadStatistics();
+}
 
-// APPROVE OR REJECT STUDENT
+// STUDENT MANAGEMENT
+async function loadStudents(){
+ const area=el('studentList');area.textContent='Loading students...';
+ const {data,error}=await db.from('profiles').select('id,full_name,email,phone,approval_status').eq('role','student').order('created_at',{ascending:false});
+ if(error){area.textContent=error.message;return}
+ allStudents=data||[];renderStudents();await loadStatistics();
+}
+function renderStudents(){
+ const area=el('studentList'),search=el('studentAdminSearch').value.toLowerCase().trim();
+ const list=allStudents.filter(s=>((s.full_name||'')+' '+(s.email||'')).toLowerCase().includes(search));
+ area.innerHTML='';
+ if(!list.length){area.textContent='No students found.';return}
+ list.forEach(s=>{
+  const box=document.createElement('div');box.className='material';
+  const name=document.createElement('strong');name.textContent=s.full_name||'Student';
+  const email=document.createElement('p');email.textContent=s.email||'';
+  const phone=document.createElement('p');phone.textContent='Phone: '+(s.phone||'Not provided');
+  const status=document.createElement('p');status.textContent='Status: '+(s.approval_status||'pending').toUpperCase();
+  box.append(name,email,phone,status);
+  if(s.approval_status!=='approved'){const b=document.createElement('button');b.className='success';b.textContent='Approve';b.onclick=()=>changeApproval(s.id,'approved');box.appendChild(b)}
+  if(s.approval_status!=='rejected'){const b=document.createElement('button');b.className='danger';b.textContent='Reject';b.onclick=()=>changeApproval(s.id,'rejected');box.appendChild(b)}
+  area.appendChild(box);
+ });
+}
 async function changeApproval(id,status){
-
  if(!confirm('Are you sure you want to '+status+' this student?'))return;
+ const {error}=await db.from('profiles').update({approval_status:status}).eq('id',id).eq('role','student');
+ if(error)return alert(error.message);
+ alert('Student status updated!');await loadStudents();
+}
 
- const {error}=await db.from('profiles')
-  .update({approval_status:status})
-  .eq('id',id)
-  .eq('role','student');
+// =====================================
+// ONLINE EXAMINATION SYSTEM
+// =====================================
 
+// CREATE EXAM
+async function createExam(){
+ const title=el('examTitle').value.trim();
+ const course=el('examCourse').value.trim();
+ const subject=el('examSubject').value.trim();
+ const duration=Number(el('examDuration').value);
+ const description=el('examDescription').value.trim();
+ const out=el('examAdminMessage');
+ if(!title||!course||!subject||!Number.isInteger(duration)||duration<1){out.textContent='Enter valid title, course, subject and duration.';return}
+ const {data:s}=await db.auth.getSession();
+ if(!s.session){out.textContent='Please login again.';return}
+ const {error}=await db.from('exams').insert({
+  title,course,subject,description,duration_minutes:duration,
+  total_marks:0,status:'draft',created_by:s.session.user.id
+ });
+ if(error){out.textContent='Create exam failed: '+error.message;return}
+ out.textContent='Examination created successfully. Add questions below.';
+ ['examTitle','examSubject','examDescription'].forEach(id=>el(id).value='');
+ await loadExams();
+}
+
+// LOAD EXAMS FOR ADMIN
+async function loadExams(){
+ const {data,error}=await db.from('exams')
+ .select('id,title,course,subject,description,duration_minutes,total_marks,status,created_at')
+ .order('created_at',{ascending:false});
+ if(error){el('adminExams').textContent=error.message;return}
+ allExams=data||[];
+ renderAdminExams();
+ updateExamSelect();
+}
+function renderAdminExams(){
+ const area=el('adminExams');area.innerHTML='';
+ if(!allExams.length){area.textContent='No examinations created yet.';return}
+ allExams.forEach(exam=>{
+  const box=document.createElement('div');box.className='material';
+  const h=document.createElement('h3');h.textContent=exam.title;
+  const p=document.createElement('p');p.textContent=exam.course+' | '+exam.subject;
+  const d=document.createElement('p');d.textContent='Duration: '+exam.duration_minutes+' minutes | Marks: '+exam.total_marks+' | Status: '+exam.status.toUpperCase();
+  box.append(h,p,d);
+  const publish=document.createElement('button');
+  publish.textContent=exam.status==='published'?'Close Exam':'Publish Exam';
+  publish.className=exam.status==='published'?'danger':'success';
+  publish.onclick=()=>changeExamStatus(exam.id,exam.status==='published'?'closed':'published');
+  const draft=document.createElement('button');draft.textContent='Set Draft';draft.className='secondary';
+  draft.onclick=()=>changeExamStatus(exam.id,'draft');
+  box.append(publish,draft);area.appendChild(box);
+ });
+}
+function updateExamSelect(){
+ const select=el('questionExam'),old=select.value;
+ select.innerHTML='<option value="">Select Examination</option>';
+ allExams.forEach(x=>{
+  const o=document.createElement('option');o.value=x.id;o.textContent=x.title+' ('+x.status+')';select.appendChild(o);
+ });
+ if(allExams.some(x=>x.id===old))select.value=old;
+}
+async function changeExamStatus(id,status){
+ const {error}=await db.from('exams').update({status}).eq('id',id);
+ if(error)return alert('Status update failed: '+error.message);
+ alert('Examination status changed to '+status+'.');await loadExams();
+}
+
+// ADD QUESTION AND PRIVATE ANSWER KEY
+async function addExamQuestion(){
+ const examId=el('questionExam').value;
+ const question=el('questionText').value.trim();
+ const A=el('optionA').value.trim(),B=el('optionB').value.trim();
+ const C=el('optionC').value.trim(),D=el('optionD').value.trim();
+ const correct=el('correctOption').value;
+ const marks=Number(el('questionMarks').value);
+ const out=el('questionMessage');
+ if(!examId||!question||!A||!B||!C||!D||!correct||!Number.isInteger(marks)||marks<1){
+  out.textContent='Complete all question fields and select the correct answer.';return;
+ }
+ const {count,error:countError}=await db.from('exam_questions')
+ .select('id',{count:'exact',head:true}).eq('exam_id',examId);
+ if(countError){out.textContent=countError.message;return}
+ const number=(count||0)+1;
+ const {data:q,error}=await db.from('exam_questions').insert({
+  exam_id:examId,question_number:number,question_text:question,
+  option_a:A,option_b:B,option_c:C,option_d:D,marks
+ }).select('id').single();
+ if(error){out.textContent='Question save failed: '+error.message;return}
+ const {error:keyError}=await db.from('exam_answer_keys').insert({
+  question_id:q.id,correct_option:correct
+ });
+ if(keyError){
+  await db.from('exam_questions').delete().eq('id',q.id);
+  out.textContent='Answer key save failed: '+keyError.message;return;
+ }
+ const exam=allExams.find(x=>x.id===examId);
+ const newTotal=(exam?.total_marks||0)+marks;
+ const {error:updateError}=await db.from('exams').update({total_marks:newTotal}).eq('id',examId);
+ if(updateError){out.textContent='Question saved, but total marks update failed: '+updateError.message;return}
+ out.textContent='Question '+number+' saved successfully!';
+ ['questionText','optionA','optionB','optionC','optionD'].forEach(id=>el(id).value='');
+ el('correctOption').value='';el('questionMarks').value=1;
+ await loadExams();
+}
+
+// STUDENT EXAM LIST
+async function loadStudentExams(){
+ const area=el('studentExams');area.textContent='Loading examinations...';
+ const {data,error}=await db.from('exams')
+ .select('id,title,course,subject,description,duration_minutes,total_marks,status')
+ .eq('status','published').order('created_at',{ascending:false});
+ if(error){area.textContent='Unable to load examinations: '+error.message;return}
+ area.innerHTML='';
+ if(!data?.length){area.textContent='No published examinations available.';return}
+ for(const exam of data){
+  const {data:attempt}=await db.from('exam_attempts')
+   .select('id,status,score,total_marks')
+   .eq('exam_id',exam.id).maybeSingle();
+  const box=document.createElement('div');box.className='material';
+  const h=document.createElement('h3');h.textContent=exam.title;
+  const p=document.createElement('p');p.textContent=exam.course+' | '+exam.subject;
+  const d=document.createElement('p');d.textContent='Duration: '+exam.duration_minutes+' minutes | Total marks: '+exam.total_marks;
+  box.append(h,p,d);
+  if(attempt?.status==='submitted'){
+   const result=document.createElement('p');result.textContent='Completed. Your score: '+attempt.score+'/'+attempt.total_marks;
+   box.appendChild(result);
+  }else{
+   const start=document.createElement('button');start.textContent=attempt?'Resume Examination':'Start Examination';
+   start.className='success';start.onclick=()=>startExam(exam);
+   box.appendChild(start);
+  }
+  area.appendChild(box);
+ }
+}
+
+// START EXAM
+async function startExam(exam){
+ if(activeAttempt)return alert('An examination is already open.');
+ const result=el('examResult');result.classList.add('hidden');
+ const {data:attemptId,error:startError}=await db.rpc('start_exam',{p_exam_id:exam.id});
+ if(startError)return alert('Unable to start exam: '+startError.message);
+ const {data:attempt,error}=await db.from('exam_attempts')
+ .select('id,started_at,status').eq('id',attemptId).single();
+ if(error)return alert(error.message);
+ if(attempt.status==='submitted')return alert('This examination has already been submitted.');
+ const {data:questions,error:qError}=await db.from('exam_questions')
+ .select('id,question_number,question_text,option_a,option_b,option_c,option_d,marks')
+ .eq('exam_id',exam.id).order('question_number');
+ if(qError)return alert(qError.message);
+ if(!questions?.length)return alert('This examination has no questions yet.');
+ activeAttempt=attemptId;activeExam=exam;currentQuestions=questions;
+ el('takeExamArea').classList.remove('hidden');
+ el('activeExamTitle').textContent=exam.title;
+ renderExamQuestions();
+ startExamTimer(attempt.started_at,exam.duration_minutes);
+ el('takeExamArea').scrollIntoView({behavior:'smooth'});
+}
+function renderExamQuestions(){
+ const area=el('examQuestions');area.innerHTML='';
+ currentQuestions.forEach((q,index)=>{
+  const box=document.createElement('div');box.className='question';
+  const h=document.createElement('h3');h.textContent=(index+1)+'. '+q.question_text+' ('+q.marks+' marks)';
+  box.appendChild(h);
+  [['A',q.option_a],['B',q.option_b],['C',q.option_c],['D',q.option_d]].forEach(([letter,value])=>{
+   const label=document.createElement('label');
+   const radio=document.createElement('input');
+   radio.type='radio';radio.name='answer_'+q.id;radio.value=letter;
+   label.append(radio,document.createTextNode(letter+'. '+value));
+   box.appendChild(label);
+  });
+  area.appendChild(box);
+ });
+}
+function startExamTimer(startedAt,minutes){
+ clearInterval(examTimerInterval);
+ const deadline=new Date(startedAt).getTime()+minutes*60000;
+ examDeadline=deadline;
+ function tick(){
+  const remaining=Math.max(0,deadline-Date.now());
+  const mins=Math.floor(remaining/60000);
+  const secs=Math.floor((remaining%60000)/1000);
+  el('examTimer').textContent='Time remaining: '+mins+':'+String(secs).padStart(2,'0');
+  if(remaining<=0){
+   clearInterval(examTimerInterval);
+   el('examTimer').textContent='Time expired. Submitting examination...';
+   submitExam(true);
+  }
+ }
+ tick();examTimerInterval=setInterval(tick,1000);
+}
+
+// SUBMIT AND AUTO MARK
+async function submitExam(auto=false){
+ if(!activeAttempt)return;
+ if(!auto&&!confirm('Are you sure you want to submit your examination?'))return;
+ const button=el('submitExamButton');button.disabled=true;
+ clearInterval(examTimerInterval);
+ const answers=currentQuestions.map(q=>{
+  const selected=document.querySelector('input[name="answer_'+q.id+'"]:checked');
+  return {question_id:q.id,selected_option:selected?selected.value:null};
+ });
+ const {data,error}=await db.rpc('submit_exam',{
+  p_attempt_id:activeAttempt,p_answers:answers
+ });
+ button.disabled=false;
  if(error){
-  alert('Student update failed: '+error.message);
+  el('examTimer').textContent='Submission failed: '+error.message;
   return;
  }
+ activeAttempt=null;activeExam=null;currentQuestions=[];
+ el('takeExamArea').classList.add('hidden');
+ const result=el('examResult');result.classList.remove('hidden');
+ result.textContent='Examination submitted successfully. Your result: '+data.score+' / '+data.total_marks+' marks.';
+ await loadStudentExams();
+}
 
- alert('Student status updated successfully!');
- await loadStudents();
+// ADMIN RESULTS
+async function loadExamResults(){
+ const area=el('adminExamResults');area.textContent='Loading results...';
+ const {data,error}=await db.from('exam_attempts')
+ .select('id,exam_id,student_id,score,total_marks,status,submitted_at,exams(title),profiles(full_name,email)')
+ .eq('status','submitted').order('submitted_at',{ascending:false});
+ if(error){area.textContent='Unable to load results: '+error.message;return}
+ area.innerHTML='';
+ if(!data?.length){area.textContent='No submitted examination results yet.';return}
+ data.forEach(r=>{
+  const box=document.createElement('div');box.className='material';
+  const h=document.createElement('h3');h.textContent=r.profiles?.full_name||r.profiles?.email||'Student';
+  const exam=document.createElement('p');exam.textContent='Examination: '+(r.exams?.title||'Exam');
+  const score=document.createElement('p');score.textContent='Score: '+r.score+'/'+r.total_marks;
+  const date=document.createElement('p');date.textContent='Submitted: '+(r.submitted_at?new Date(r.submitted_at).toLocaleString():'');
+  box.append(h,exam,score,date);area.appendChild(box);
+ });
 }
 
 // LOGOUT
 async function logout(){
- await db.auth.signOut();
- location.reload();
+ clearInterval(examTimerInterval);
+ await db.auth.signOut();location.reload();
 }
 
-// RESTORE SESSION
+// RESTORE LOGIN SESSION
 async function checkSession(){
-
  const {data}=await db.auth.getSession();
-
- if(data.session){
-  await showDashboard(data.session.user);
- }
+ if(data.session)await showDashboard(data.session.user);
 }
-
 checkSession();
-
 </script>
-
 </body>
 </html>
