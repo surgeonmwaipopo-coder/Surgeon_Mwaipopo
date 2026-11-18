@@ -5,90 +5,34 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Surgeon_Mwaipopo Education</title>
-
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
 *{box-sizing:border-box}
-body{
- margin:0;
- font-family:Arial,sans-serif;
- background:#f1f5f9;
- color:#172554;
-}
-header{
- background:#082f49;
- color:white;
- padding:22px 15px;
- text-align:center;
-}
+body{margin:0;font-family:Arial,sans-serif;background:#f1f5f9;color:#172554}
+header{background:#082f49;color:white;padding:22px 15px;text-align:center}
 header h1{margin:0;font-size:25px}
-header p{margin:8px 0 0}
-.container{
- max-width:850px;
- margin:25px auto;
- padding:15px;
-}
-.card{
- background:white;
- padding:22px;
- border-radius:12px;
- margin-bottom:18px;
- box-shadow:0 3px 12px #0001;
-}
+.container{max-width:850px;margin:25px auto;padding:15px}
+.card{background:white;padding:22px;border-radius:12px;margin-bottom:18px;box-shadow:0 3px 12px #0001}
 h2{color:#075985}
-input{
- width:100%;
- padding:13px;
- margin:8px 0;
- border:1px solid #cbd5e1;
- border-radius:7px;
- font-size:15px;
-}
-button{
- padding:11px;
- margin:5px 2px;
- background:#0369a1;
- color:white;
- border:0;
- border-radius:7px;
- font-size:14px;
- font-weight:bold;
- cursor:pointer;
-}
-button:disabled{opacity:.5;cursor:not-allowed}
-button.secondary{background:#475569}
-button.approve{background:#15803d}
-button.reject{background:#b91c1c}
-.full{width:100%;padding:13px;font-size:16px}
+input,textarea{width:100%;padding:13px;margin:8px 0;border:1px solid #cbd5e1;border-radius:7px;font-size:15px}
+button{padding:12px;margin:6px 2px;background:#0369a1;color:white;border:0;border-radius:7px;font-size:15px;font-weight:bold;cursor:pointer}
+button:disabled{opacity:.5}
+.full{width:100%}
+.secondary{background:#475569}
 .hidden{display:none}
-.message{
- padding:10px;
- background:#e0f2fe;
- border-radius:6px;
- margin:10px 0;
-}
-.status{
- display:inline-block;
- padding:5px 9px;
- border-radius:6px;
- font-weight:bold;
- font-size:12px;
-}
+.message{padding:10px;background:#e0f2fe;border-radius:6px;margin:10px 0}
+.status{display:inline-block;padding:5px 9px;border-radius:6px;font-weight:bold;font-size:12px}
 .pending{background:#fef3c7;color:#92400e}
 .approved{background:#dcfce7;color:#166534}
 .rejected{background:#fee2e2;color:#991b1b}
-.table-wrap{overflow-x:auto}
-table{width:100%;border-collapse:collapse;font-size:13px}
-td,th{padding:9px;border:1px solid #ddd;text-align:left}
-th{background:#e0f2fe}
-.actions{min-width:145px}
+.material{border:1px solid #cbd5e1;padding:15px;border-radius:9px;margin:12px 0}
+.material h3{margin-top:0;color:#075985}
 footer{text-align:center;padding:20px;color:#64748b}
 </style>
 </head>
 
 <body>
-
 <header>
 <h1>Surgeon_Mwaipopo Education</h1>
 <p>Welcome to Our Education Platform</p>
@@ -97,28 +41,22 @@ footer{text-align:center;padding:20px;color:#64748b}
 <div class="container">
 
 <div id="authArea">
-
 <div class="card">
 <h2>Student Registration</h2>
-
 <input id="fullName" placeholder="Full Name">
 <input id="phone" type="tel" placeholder="Phone Number">
 <input id="regEmail" type="email" placeholder="Email Address">
 <input id="regPassword" type="password" placeholder="Create Password">
-
 <button class="full" onclick="register()">Register Now</button>
 </div>
 
 <div class="card">
 <h2>Login</h2>
-
 <input id="loginEmail" type="email" placeholder="Email Address">
 <input id="loginPassword" type="password" placeholder="Password">
-
 <button class="full" onclick="login()">Login</button>
 <p id="authMessage"></p>
 </div>
-
 </div>
 
 <div id="studentArea" class="card hidden">
@@ -126,8 +64,11 @@ footer{text-align:center;padding:20px;color:#64748b}
 <p>Welcome, <strong id="studentName"></strong></p>
 <p id="studentEmail"></p>
 <p id="studentPhone"></p>
-<p class="status approved">APPROVED</p>
-<p>Your account is active. Welcome to our education platform.</p>
+<span class="status approved">APPROVED</span>
+
+<h2>My Study Materials</h2>
+<div id="studentMaterials">Loading notes...</div>
+<button class="secondary full" onclick="loadMaterials('studentMaterials')">Refresh Notes</button>
 <button class="secondary full" onclick="logout()">Logout</button>
 </div>
 
@@ -135,11 +76,22 @@ footer{text-align:center;padding:20px;color:#64748b}
 <h2>Admin Dashboard</h2>
 <p>Welcome, Administrator.</p>
 
-<h3>Student Approval Management</h3>
-<p>Approve or reject student registration requests below.</p>
+<h2>Upload Study Materials</h2>
+<input id="materialTitle" placeholder="Material Title">
+<input id="materialSubject" placeholder="Subject Name">
+<textarea id="materialDescription" placeholder="Description (optional)"></textarea>
+<input id="materialFile" type="file" accept=".pdf,application/pdf">
+<button class="full" id="uploadButton" onclick="uploadMaterial()">Upload PDF</button>
+<p id="uploadMessage"></p>
 
+<hr>
+<h2>All Study Materials</h2>
+<div id="adminMaterials">Loading notes...</div>
+<button class="full" onclick="loadMaterials('adminMaterials')">Refresh Materials</button>
+
+<hr>
+<h2>Registered Students</h2>
 <div id="studentList">Loading students...</div>
-
 <button class="full" onclick="loadStudents()">Refresh Students</button>
 <button class="secondary full" onclick="logout()">Logout</button>
 </div>
@@ -152,30 +104,19 @@ footer{text-align:center;padding:20px;color:#64748b}
 </footer>
 
 <script>
-const SUPABASE_URL =
-'https://gdvdwxvcyxzolagqmolp.supabase.co';
+const SUPABASE_URL='https://gdvdwxvcyxzolagqmolp.supabase.co';
+const SUPABASE_KEY='sb_publishable_quWzIYk5v8p_9lRWBOp_VA_Ld72ox76';
+const BUCKET='study_notes';
 
-const SUPABASE_KEY =
-'sb_publishable_quWzIYk5v8p_9lRWBOp_VA_Ld72ox76';
-
-const db = window.supabase.createClient(
-SUPABASE_URL,
-SUPABASE_KEY
-);
+const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
 function message(text){
  document.getElementById('authMessage').textContent=text;
 }
 
 function escapeHTML(value){
- return String(value ?? '').replace(/[&<>"']/g,function(c){
-  return {
-   '&':'&amp;',
-   '<':'&lt;',
-   '>':'&gt;',
-   '"':'&quot;',
-   "'":'&#39;'
-  }[c];
+ return String(value??'').replace(/[&<>"']/g,function(c){
+  return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
  });
 }
 
@@ -189,51 +130,32 @@ async function register(){
   alert('Please fill in all fields.');
   return;
  }
-
  if(password.length<6){
   alert('Password must contain at least 6 characters.');
   return;
  }
 
  const {error}=await db.auth.signUp({
-  email:email,
-  password:password,
-  options:{
-   data:{
-    full_name:fullName,
-    phone:phone
-   }
-  }
+  email,password,
+  options:{data:{full_name:fullName,phone:phone}}
  });
 
- if(error){
-  alert(error.message);
-  return;
- }
+ if(error){alert(error.message);return;}
 
- alert('Registration submitted successfully. Your account is waiting for Admin approval. Check your email if confirmation is required.');
+ alert('Registration submitted. Your account is waiting for Admin approval.');
 }
 
 async function login(){
  const email=document.getElementById('loginEmail').value.trim();
  const password=document.getElementById('loginPassword').value;
 
- if(!email||!password){
-  message('Enter email and password.');
-  return;
- }
+ if(!email||!password){message('Enter email and password.');return;}
 
  message('Logging in...');
 
- const {data,error}=await db.auth.signInWithPassword({
-  email:email,
-  password:password
- });
+ const {data,error}=await db.auth.signInWithPassword({email,password});
 
- if(error){
-  message(error.message);
-  return;
- }
+ if(error){message(error.message);return;}
 
  await showDashboard(data.user);
 }
@@ -246,7 +168,7 @@ async function showDashboard(user){
   .maybeSingle();
 
  if(error||!profile){
-  alert('Profile not found. Please contact the administrator.');
+  alert('Profile not found: '+(error?.message||'Please contact Admin.'));
   await db.auth.signOut();
   location.reload();
   return;
@@ -256,44 +178,164 @@ async function showDashboard(user){
   document.getElementById('authArea').classList.add('hidden');
   document.getElementById('adminArea').classList.remove('hidden');
   await loadStudents();
+  await loadMaterials('adminMaterials');
   return;
  }
 
  if(profile.approval_status!=='approved'){
   await db.auth.signOut();
-
   document.getElementById('authArea').classList.remove('hidden');
-
-  if(profile.approval_status==='rejected'){
-   message('Your registration has been rejected. Please contact the administrator.');
-  }else{
-   message('Your account is pending approval. Please wait for Admin approval.');
-  }
-
+  message(profile.approval_status==='rejected'
+   ?'Your registration was rejected. Contact Admin.'
+   :'Your account is pending approval. Please wait.');
   return;
  }
 
  document.getElementById('authArea').classList.add('hidden');
  document.getElementById('studentArea').classList.remove('hidden');
+ document.getElementById('studentName').textContent=profile.full_name||'Student';
+ document.getElementById('studentEmail').textContent='Email: '+(profile.email||user.email);
+ document.getElementById('studentPhone').textContent='Phone: '+(profile.phone||'Not provided');
 
- document.getElementById('studentName').textContent=
-  profile.full_name||'Student';
-
- document.getElementById('studentEmail').textContent=
-  'Email: '+(profile.email||user.email);
-
- document.getElementById('studentPhone').textContent=
-  'Phone: '+(profile.phone||'Not provided');
+ await loadMaterials('studentMaterials');
 }
 
-function statusBadge(status){
- const s=status||'pending';
- const allowed=['pending','approved','rejected'];
- const safe=allowed.includes(s)?s:'pending';
+async function uploadMaterial(){
+ const title=document.getElementById('materialTitle').value.trim();
+ const subject=document.getElementById('materialSubject').value.trim();
+ const description=document.getElementById('materialDescription').value.trim();
+ const file=document.getElementById('materialFile').files[0];
+ const button=document.getElementById('uploadButton');
+ const output=document.getElementById('uploadMessage');
 
- return '<span class="status '+safe+'">'+
-  escapeHTML(safe.toUpperCase())+
-  '</span>';
+ if(!title||!subject||!file){
+  output.textContent='Enter title, subject and choose a PDF file.';
+  return;
+ }
+
+ if(file.type!=='application/pdf'){
+  output.textContent='Only PDF files are allowed.';
+  return;
+ }
+
+ if(file.size>20*1024*1024){
+  output.textContent='File is too large. Maximum size is 20 MB.';
+  return;
+ }
+
+ button.disabled=true;
+ output.textContent='Uploading PDF...';
+
+ const {data:sessionData}=await db.auth.getSession();
+ const user=sessionData.session?.user;
+
+ if(!user){
+  output.textContent='Please login again.';
+  button.disabled=false;
+  return;
+ }
+
+ const safeName=file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+ const filePath=user.id+'/'+Date.now()+'-'+safeName;
+
+ const {error:uploadError}=await db.storage
+  .from(BUCKET)
+  .upload(filePath,file,{contentType:'application/pdf',upsert:false});
+
+ if(uploadError){
+  output.textContent='Upload failed: '+uploadError.message;
+  button.disabled=false;
+  return;
+ }
+
+ const {error:insertError}=await db
+  .from('study_materials')
+  .insert({
+   title:title,
+   subject:subject,
+   description:description,
+   file_path:filePath,
+   created_by:user.id
+  });
+
+ if(insertError){
+  await db.storage.from(BUCKET).remove([filePath]);
+  output.textContent='Database error: '+insertError.message;
+  button.disabled=false;
+  return;
+ }
+
+ output.textContent='PDF uploaded successfully!';
+ document.getElementById('materialTitle').value='';
+ document.getElementById('materialSubject').value='';
+ document.getElementById('materialDescription').value='';
+ document.getElementById('materialFile').value='';
+
+ button.disabled=false;
+ await loadMaterials('adminMaterials');
+}
+
+async function loadMaterials(target){
+ const area=document.getElementById(target);
+ area.textContent='Loading study materials...';
+
+ const {data,error}=await db
+  .from('study_materials')
+  .select('id,title,subject,description,file_path,created_at')
+  .order('created_at',{ascending:false});
+
+ if(error){
+  area.textContent='Unable to load materials: '+error.message;
+  return;
+ }
+
+ if(!data||data.length===0){
+  area.textContent='No study materials uploaded yet.';
+  return;
+ }
+
+ area.innerHTML='';
+
+ for(const item of data){
+  const box=document.createElement('div');
+  box.className='material';
+
+  const heading=document.createElement('h3');
+  heading.textContent=item.title;
+
+  const subject=document.createElement('p');
+  subject.textContent='Subject: '+item.subject;
+
+  const description=document.createElement('p');
+  description.textContent=item.description||'';
+
+  const button=document.createElement('button');
+  button.textContent='Open / Download PDF';
+
+  button.onclick=async()=>{
+   button.disabled=true;
+   button.textContent='Preparing PDF...';
+
+   const {data:linkData,error:linkError}=await db.storage
+    .from(BUCKET)
+    .createSignedUrl(item.file_path,300);
+
+   if(linkError){
+    alert('Unable to open PDF: '+linkError.message);
+   }else{
+    window.open(linkData.signedUrl,'_blank','noopener');
+   }
+
+   button.disabled=false;
+   button.textContent='Open / Download PDF';
+  };
+
+  box.appendChild(heading);
+  box.appendChild(subject);
+  box.appendChild(description);
+  box.appendChild(button);
+  area.appendChild(box);
+ }
 }
 
 async function loadStudents(){
@@ -302,80 +344,63 @@ async function loadStudents(){
 
  const {data,error}=await db
   .from('profiles')
-  .select('id,full_name,email,phone,role,approval_status')
+  .select('id,full_name,email,phone,approval_status')
   .eq('role','student')
   .order('created_at',{ascending:false});
 
- if(error){
-  area.textContent='Unable to load students: '+error.message;
-  return;
- }
+ if(error){area.textContent=error.message;return;}
+ if(!data||data.length===0){area.textContent='No students found.';return;}
 
- if(!data||data.length===0){
-  area.textContent='No students registered yet.';
-  return;
- }
-
- let html='<div class="table-wrap"><table>';
- html+='<tr><th>Name</th><th>Email</th><th>Phone</th><th>Status</th><th>Action</th></tr>';
+ area.innerHTML='';
 
  data.forEach(student=>{
-  const id=escapeHTML(student.id);
-  const status=student.approval_status||'pending';
+  const row=document.createElement('div');
+  row.className='material';
 
-  html+='<tr>';
-  html+='<td>'+escapeHTML(student.full_name||'')+'</td>';
-  html+='<td>'+escapeHTML(student.email||'')+'</td>';
-  html+='<td>'+escapeHTML(student.phone||'')+'</td>';
-  html+='<td>'+statusBadge(status)+'</td>';
-  html+='<td class="actions">';
+  const name=document.createElement('strong');
+  name.textContent=student.full_name||'Student';
 
-  if(status!=='approved'){
-   html+='<button class="approve" data-id="'+id+'" data-status="approved">Approve</button>';
+  const email=document.createElement('p');
+  email.textContent=student.email||'';
+
+  const status=document.createElement('p');
+  status.textContent='Status: '+(student.approval_status||'pending').toUpperCase();
+
+  row.append(name,email,status);
+
+  if(student.approval_status!=='approved'){
+   const approve=document.createElement('button');
+   approve.textContent='Approve';
+   approve.onclick=()=>changeApproval(student.id,'approved');
+   row.appendChild(approve);
   }
 
-  if(status!=='rejected'){
-   html+='<button class="reject" data-id="'+id+'" data-status="rejected">Reject</button>';
+  if(student.approval_status!=='rejected'){
+   const reject=document.createElement('button');
+   reject.textContent='Reject';
+   reject.className='secondary';
+   reject.onclick=()=>changeApproval(student.id,'rejected');
+   row.appendChild(reject);
   }
 
-  html+='</td></tr>';
+  area.appendChild(row);
  });
-
- html+='</table></div>';
- area.innerHTML=html;
 }
 
-document.getElementById('studentList').addEventListener('click',async function(event){
- const button=event.target.closest('button[data-id][data-status]');
-
- if(!button)return;
-
- const studentId=button.dataset.id;
- const newStatus=button.dataset.status;
-
- const action=newStatus==='approved'?'approve':'reject';
-
- if(!confirm('Are you sure you want to '+action+' this student?')){
-  return;
- }
-
- button.disabled=true;
+async function changeApproval(id,status){
+ if(!confirm('Are you sure you want to '+status+' this student?'))return;
 
  const {error}=await db
   .from('profiles')
-  .update({approval_status:newStatus})
-  .eq('id',studentId)
+  .update({approval_status:status})
+  .eq('id',id)
   .eq('role','student');
 
- if(error){
-  alert('Unable to update student: '+error.message);
-  button.disabled=false;
-  return;
- }
+ if(error){alert(error.message);return;}
 
- alert('Student status updated successfully: '+newStatus.toUpperCase());
+ alert('Student status updated.');
  await loadStudents();
-});
+}
 
 async function logout(){
  await db.auth.signOut();
@@ -383,20 +408,11 @@ async function logout(){
 }
 
 async function checkSession(){
- const {data,error}=await db.auth.getSession();
-
- if(error){
-  console.error(error);
-  return;
- }
-
- if(data.session){
-  await showDashboard(data.session.user);
- }
+ const {data}=await db.auth.getSession();
+ if(data.session)await showDashboard(data.session.user);
 }
 
 checkSession();
-
 </script>
 </body>
 </html>
