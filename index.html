@@ -20,6 +20,7 @@ button{padding:12px;margin:6px 2px;background:#0369a1;color:white;border:0;borde
 button:disabled{opacity:.5}
 .full{width:100%}
 .secondary{background:#475569}
+.danger{background:#dc2626}
 .hidden{display:none}
 .message{padding:10px;background:#e0f2fe;border-radius:6px;margin:10px 0}
 .status{display:inline-block;padding:5px 9px;border-radius:6px;font-weight:bold;font-size:12px}
@@ -33,6 +34,7 @@ footer{text-align:center;padding:20px;color:#64748b}
 </head>
 
 <body>
+
 <header>
 <h1>Surgeon_Mwaipopo Education</h1>
 <p>Welcome to Our Education Platform</p>
@@ -41,6 +43,7 @@ footer{text-align:center;padding:20px;color:#64748b}
 <div class="container">
 
 <div id="authArea">
+
 <div class="card">
 <h2>Student Registration</h2>
 <input id="fullName" placeholder="Full Name">
@@ -57,9 +60,11 @@ footer{text-align:center;padding:20px;color:#64748b}
 <button class="full" onclick="login()">Login</button>
 <p id="authMessage"></p>
 </div>
+
 </div>
 
 <div id="studentArea" class="card hidden">
+
 <h2>Student Dashboard</h2>
 <p>Welcome, <strong id="studentName"></strong></p>
 <p id="studentEmail"></p>
@@ -68,32 +73,42 @@ footer{text-align:center;padding:20px;color:#64748b}
 
 <h2>My Study Materials</h2>
 <div id="studentMaterials">Loading notes...</div>
+
 <button class="secondary full" onclick="loadMaterials('studentMaterials')">Refresh Notes</button>
 <button class="secondary full" onclick="logout()">Logout</button>
+
 </div>
 
 <div id="adminArea" class="card hidden">
+
 <h2>Admin Dashboard</h2>
 <p>Welcome, Administrator.</p>
 
 <h2>Upload Study Materials</h2>
+
 <input id="materialTitle" placeholder="Material Title">
 <input id="materialSubject" placeholder="Subject Name">
 <textarea id="materialDescription" placeholder="Description (optional)"></textarea>
 <input id="materialFile" type="file" accept=".pdf,application/pdf">
+
 <button class="full" id="uploadButton" onclick="uploadMaterial()">Upload PDF</button>
 <p id="uploadMessage"></p>
 
 <hr>
+
 <h2>All Study Materials</h2>
 <div id="adminMaterials">Loading notes...</div>
+
 <button class="full" onclick="loadMaterials('adminMaterials')">Refresh Materials</button>
 
 <hr>
+
 <h2>Registered Students</h2>
 <div id="studentList">Loading students...</div>
+
 <button class="full" onclick="loadStudents()">Refresh Students</button>
 <button class="secondary full" onclick="logout()">Logout</button>
+
 </div>
 
 </div>
@@ -104,10 +119,9 @@ footer{text-align:center;padding:20px;color:#64748b}
 </footer>
 
 <script>
+
 const SUPABASE_URL='https://gdvdwxvcyxzolagqmolp.supabase.co';
 const SUPABASE_KEY='sb_publishable_quWzIYk5v8p_9lRWBOp_VA_Ld72ox76';
-
-/* JINA LA BUCKET LIMEBADILISHWA HAPA */
 const BUCKET='Study_notes';
 
 const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
@@ -123,6 +137,7 @@ function escapeHTML(value){
 }
 
 async function register(){
+
  const fullName=document.getElementById('fullName').value.trim();
  const phone=document.getElementById('phone').value.trim();
  const email=document.getElementById('regEmail').value.trim();
@@ -132,37 +147,58 @@ async function register(){
   alert('Please fill in all fields.');
   return;
  }
+
  if(password.length<6){
   alert('Password must contain at least 6 characters.');
   return;
  }
 
  const {error}=await db.auth.signUp({
-  email,password,
-  options:{data:{full_name:fullName,phone:phone}}
+  email,
+  password,
+  options:{
+   data:{
+    full_name:fullName,
+    phone:phone
+   }
+  }
  });
 
- if(error){alert(error.message);return;}
+ if(error){
+  alert(error.message);
+  return;
+ }
 
  alert('Registration submitted. Your account is waiting for Admin approval.');
 }
 
 async function login(){
+
  const email=document.getElementById('loginEmail').value.trim();
  const password=document.getElementById('loginPassword').value;
 
- if(!email||!password){message('Enter email and password.');return;}
+ if(!email||!password){
+  message('Enter email and password.');
+  return;
+ }
 
  message('Logging in...');
 
- const {data,error}=await db.auth.signInWithPassword({email,password});
+ const {data,error}=await db.auth.signInWithPassword({
+  email,
+  password
+ });
 
- if(error){message(error.message);return;}
+ if(error){
+  message(error.message);
+  return;
+ }
 
  await showDashboard(data.user);
 }
 
 async function showDashboard(user){
+
  const {data:profile,error}=await db
   .from('profiles')
   .select('id,email,full_name,phone,role,approval_status')
@@ -177,24 +213,31 @@ async function showDashboard(user){
  }
 
  if(profile.role==='admin'){
+
   document.getElementById('authArea').classList.add('hidden');
   document.getElementById('adminArea').classList.remove('hidden');
+
   await loadStudents();
   await loadMaterials('adminMaterials');
   return;
  }
 
  if(profile.approval_status!=='approved'){
+
   await db.auth.signOut();
+
   document.getElementById('authArea').classList.remove('hidden');
+
   message(profile.approval_status==='rejected'
    ?'Your registration was rejected. Contact Admin.'
    :'Your account is pending approval. Please wait.');
+
   return;
  }
 
  document.getElementById('authArea').classList.add('hidden');
  document.getElementById('studentArea').classList.remove('hidden');
+
  document.getElementById('studentName').textContent=profile.full_name||'Student';
  document.getElementById('studentEmail').textContent='Email: '+(profile.email||user.email);
  document.getElementById('studentPhone').textContent='Phone: '+(profile.phone||'Not provided');
@@ -203,10 +246,12 @@ async function showDashboard(user){
 }
 
 async function uploadMaterial(){
+
  const title=document.getElementById('materialTitle').value.trim();
  const subject=document.getElementById('materialSubject').value.trim();
  const description=document.getElementById('materialDescription').value.trim();
  const file=document.getElementById('materialFile').files[0];
+
  const button=document.getElementById('uploadButton');
  const output=document.getElementById('uploadMessage');
 
@@ -242,7 +287,10 @@ async function uploadMaterial(){
 
  const {error:uploadError}=await db.storage
   .from(BUCKET)
-  .upload(filePath,file,{contentType:'application/pdf',upsert:false});
+  .upload(filePath,file,{
+   contentType:'application/pdf',
+   upsert:false
+  });
 
  if(uploadError){
   output.textContent='Upload failed: '+uploadError.message;
@@ -261,23 +309,28 @@ async function uploadMaterial(){
   });
 
  if(insertError){
+
   await db.storage.from(BUCKET).remove([filePath]);
+
   output.textContent='Database error: '+insertError.message;
   button.disabled=false;
   return;
  }
 
  output.textContent='PDF uploaded successfully!';
+
  document.getElementById('materialTitle').value='';
  document.getElementById('materialSubject').value='';
  document.getElementById('materialDescription').value='';
  document.getElementById('materialFile').value='';
 
  button.disabled=false;
+
  await loadMaterials('adminMaterials');
 }
 
 async function loadMaterials(target){
+
  const area=document.getElementById(target);
  area.textContent='Loading study materials...';
 
@@ -299,6 +352,7 @@ async function loadMaterials(target){
  area.innerHTML='';
 
  for(const item of data){
+
   const box=document.createElement('div');
   box.className='material';
 
@@ -315,6 +369,7 @@ async function loadMaterials(target){
   button.textContent='Open / Download PDF';
 
   button.onclick=async()=>{
+
    button.disabled=true;
    button.textContent='Preparing PDF...';
 
@@ -336,11 +391,66 @@ async function loadMaterials(target){
   box.appendChild(subject);
   box.appendChild(description);
   box.appendChild(button);
+
+  if(target==='adminMaterials'){
+
+   const deleteButton=document.createElement('button');
+
+   deleteButton.textContent='Delete PDF';
+   deleteButton.className='danger';
+
+   deleteButton.onclick=()=>{
+    deleteMaterial(item.id,item.file_path);
+   };
+
+   box.appendChild(deleteButton);
+  }
+
   area.appendChild(box);
  }
 }
 
+async function deleteMaterial(id,filePath){
+
+ const confirmed=confirm(
+  'Are you sure you want to permanently delete this PDF?'
+ );
+
+ if(!confirmed)return;
+
+ const {data:sessionData}=await db.auth.getSession();
+
+ if(!sessionData.session){
+  alert('Please login again.');
+  return;
+ }
+
+ const {error:storageError}=await db.storage
+  .from(BUCKET)
+  .remove([filePath]);
+
+ if(storageError){
+  alert('PDF deletion failed: '+storageError.message);
+  return;
+ }
+
+ const {error:databaseError}=await db
+  .from('study_materials')
+  .delete()
+  .eq('id',id);
+
+ if(databaseError){
+  alert('The PDF file was removed, but its database record could not be deleted: '+databaseError.message);
+  return;
+ }
+
+ alert('PDF deleted successfully!');
+
+ await loadMaterials('adminMaterials');
+}
+
 async function loadStudents(){
+
  const area=document.getElementById('studentList');
  area.textContent='Loading students...';
 
@@ -350,12 +460,20 @@ async function loadStudents(){
   .eq('role','student')
   .order('created_at',{ascending:false});
 
- if(error){area.textContent=error.message;return;}
- if(!data||data.length===0){area.textContent='No students found.';return;}
+ if(error){
+  area.textContent=error.message;
+  return;
+ }
+
+ if(!data||data.length===0){
+  area.textContent='No students found.';
+  return;
+ }
 
  area.innerHTML='';
 
  data.forEach(student=>{
+
   const row=document.createElement('div');
   row.className='material';
 
@@ -371,17 +489,23 @@ async function loadStudents(){
   row.append(name,email,status);
 
   if(student.approval_status!=='approved'){
+
    const approve=document.createElement('button');
+
    approve.textContent='Approve';
    approve.onclick=()=>changeApproval(student.id,'approved');
+
    row.appendChild(approve);
   }
 
   if(student.approval_status!=='rejected'){
+
    const reject=document.createElement('button');
+
    reject.textContent='Reject';
    reject.className='secondary';
    reject.onclick=()=>changeApproval(student.id,'rejected');
+
    row.appendChild(reject);
   }
 
@@ -390,6 +514,7 @@ async function loadStudents(){
 }
 
 async function changeApproval(id,status){
+
  if(!confirm('Are you sure you want to '+status+' this student?'))return;
 
  const {error}=await db
@@ -398,23 +523,34 @@ async function changeApproval(id,status){
   .eq('id',id)
   .eq('role','student');
 
- if(error){alert(error.message);return;}
+ if(error){
+  alert(error.message);
+  return;
+ }
 
  alert('Student status updated.');
+
  await loadStudents();
 }
 
 async function logout(){
+
  await db.auth.signOut();
  location.reload();
 }
 
 async function checkSession(){
+
  const {data}=await db.auth.getSession();
- if(data.session)await showDashboard(data.session.user);
+
+ if(data.session){
+  await showDashboard(data.session.user);
+ }
 }
 
 checkSession();
+
 </script>
+
 </body>
 </html>
