@@ -798,23 +798,80 @@ async function submitExam(auto=false){
  await loadStudentExams();
 }
 
-// ADMIN RESULTS
+// ADMIN RESULTS - FIXED
 async function loadExamResults(){
- const area=el('adminExamResults');area.textContent='Loading results...';
- const {data,error}=await db.from('exam_attempts')
- .select('id,exam_id,student_id,score,total_marks,status,submitted_at,exams(title),profiles(full_name,email)')
- .eq('status','submitted').order('submitted_at',{ascending:false});
- if(error){area.textContent='Unable to load results: '+error.message;return}
- area.innerHTML='';
- if(!data?.length){area.textContent='No submitted examination results yet.';return}
- data.forEach(r=>{
-  const box=document.createElement('div');box.className='material';
-  const h=document.createElement('h3');h.textContent=r.profiles?.full_name||r.profiles?.email||'Student';
-  const exam=document.createElement('p');exam.textContent='Examination: '+(r.exams?.title||'Exam');
-  const score=document.createElement('p');score.textContent='Score: '+r.score+'/'+r.total_marks;
-  const date=document.createElement('p');date.textContent='Submitted: '+(r.submitted_at?new Date(r.submitted_at).toLocaleString():'');
-  box.append(h,exam,score,date);area.appendChild(box);
- });
+ const area=el('adminExamResults');
+ area.textContent='Loading results...';
+
+ try{
+  // Load submitted attempts and exam titles first.
+  const {data:attempts,error:attemptError}=await db
+   .from('exam_attempts')
+   .select('id,exam_id,student_id,score,total_marks,status,submitted_at,exams(title)')
+   .eq('status','submitted')
+   .order('submitted_at',{ascending:false});
+
+  if(attemptError)throw attemptError;
+
+  area.innerHTML='';
+
+  if(!attempts||attempts.length===0){
+   area.textContent='No submitted examination results yet.';
+   return;
+  }
+
+  // Load student profiles separately because the foreign key
+  // connects exam_attempts to auth.users, not public.profiles.
+  const studentIds=[
+   ...new Set(attempts.map(r=>r.student_id).filter(Boolean))
+  ];
+
+  const {data:students,error:studentError}=await db
+   .from('profiles')
+   .select('id,full_name,email')
+   .in('id',studentIds);
+
+  if(studentError)throw studentError;
+
+  // Match each student profile using the student ID.
+  const studentMap={};
+  (students||[]).forEach(s=>{
+   studentMap[s.id]=s;
+  });
+
+  // Display each examination result.
+  attempts.forEach(r=>{
+   const student=studentMap[r.student_id];
+
+   const box=document.createElement('div');
+   box.className='material';
+
+   const h=document.createElement('h3');
+   h.textContent=student?.full_name||student?.email||'Student';
+
+   const email=document.createElement('p');
+   email.textContent='Email: '+(student?.email||'Not available');
+
+   const exam=document.createElement('p');
+   exam.textContent='Examination: '+(r.exams?.title||'Exam');
+
+   const score=document.createElement('p');
+   score.textContent='Score: '+r.score+'/'+r.total_marks;
+
+   const date=document.createElement('p');
+   date.textContent='Submitted: '+(
+    r.submitted_at
+     ?new Date(r.submitted_at).toLocaleString()
+     :'Not available'
+   );
+
+   box.append(h,email,exam,score,date);
+   area.appendChild(box);
+  });
+
+ }catch(error){
+  area.textContent='Unable to load results: '+error.message;
+ }
 }
 
 // LOGOUT
