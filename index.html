@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,26 +11,39 @@
 <style>
 *{box-sizing:border-box}
 body{margin:0;font-family:Arial,sans-serif;background:#f1f5f9;color:#172554}
-header{background:#082f49;color:white;padding:22px 15px;text-align:center}
+header{background:#082f49;color:white;padding:25px 15px;text-align:center}
 header h1{margin:0;font-size:25px}
-.container{max-width:850px;margin:25px auto;padding:15px}
-.card{background:white;padding:22px;border-radius:12px;margin-bottom:18px;box-shadow:0 3px 12px #0001}
+header p{margin-bottom:0}
+.container{max-width:1000px;margin:25px auto;padding:15px}
+.card{background:white;padding:20px;border-radius:12px;margin-bottom:18px;box-shadow:0 3px 12px #0001}
 h2{color:#075985}
-input,textarea{width:100%;padding:13px;margin:8px 0;border:1px solid #cbd5e1;border-radius:7px;font-size:15px}
-button{padding:12px;margin:6px 2px;background:#0369a1;color:white;border:0;border-radius:7px;font-size:15px;font-weight:bold;cursor:pointer}
+h3{color:#075985}
+input,textarea,select{width:100%;padding:13px;margin:8px 0;border:1px solid #cbd5e1;border-radius:7px;font-size:15px;background:white}
+textarea{min-height:85px}
+button{padding:12px;margin:6px 2px;background:#0369a1;color:white;border:0;border-radius:7px;font-size:14px;font-weight:bold;cursor:pointer}
 button:disabled{opacity:.5}
 .full{width:100%}
 .secondary{background:#475569}
 .danger{background:#dc2626}
-.hidden{display:none}
-.message{padding:10px;background:#e0f2fe;border-radius:6px;margin:10px 0}
+.success{background:#15803d}
+.hidden{display:none!important}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:15px 0}
+.stat{background:#e0f2fe;padding:17px;border-radius:10px;text-align:center}
+.stat strong{display:block;font-size:28px;color:#075985}
+.stat span{font-size:13px;color:#334155}
+.material{border:1px solid #cbd5e1;padding:15px;border-radius:9px;margin:12px 0;background:white}
+.material h3{margin-top:0}
 .status{display:inline-block;padding:5px 9px;border-radius:6px;font-weight:bold;font-size:12px}
 .pending{background:#fef3c7;color:#92400e}
 .approved{background:#dcfce7;color:#166534}
 .rejected{background:#fee2e2;color:#991b1b}
-.material{border:1px solid #cbd5e1;padding:15px;border-radius:9px;margin:12px 0}
-.material h3{margin-top:0;color:#075985}
+.message{padding:10px;background:#e0f2fe;border-radius:6px;margin:10px 0}
+.toolbar{margin:15px 0}
 footer{text-align:center;padding:20px;color:#64748b}
+hr{border:0;border-top:1px solid #e2e8f0;margin:25px 0}
+@media(min-width:650px){
+.stats{grid-template-columns:repeat(4,1fr)}
+}
 </style>
 </head>
 
@@ -37,10 +51,12 @@ footer{text-align:center;padding:20px;color:#64748b}
 
 <header>
 <h1>Surgeon_Mwaipopo Education</h1>
-<p>Welcome to Our Education Platform</p>
+<p>Your Learning, Our Priority</p>
 </header>
 
 <div class="container">
+
+<!-- AUTHENTICATION -->
 
 <div id="authArea">
 
@@ -63,6 +79,8 @@ footer{text-align:center;padding:20px;color:#64748b}
 
 </div>
 
+<!-- STUDENT DASHBOARD -->
+
 <div id="studentArea" class="card hidden">
 
 <h2>Student Dashboard</h2>
@@ -71,7 +89,16 @@ footer{text-align:center;padding:20px;color:#64748b}
 <p id="studentPhone"></p>
 <span class="status approved">APPROVED</span>
 
+<hr>
+
 <h2>My Study Materials</h2>
+
+<input id="studentSearch" placeholder="Search notes by title or subject..." oninput="renderMaterials('studentMaterials')">
+
+<select id="studentSubject" onchange="renderMaterials('studentMaterials')">
+<option value="">All Subjects</option>
+</select>
+
 <div id="studentMaterials">Loading notes...</div>
 
 <button class="secondary full" onclick="loadMaterials('studentMaterials')">Refresh Notes</button>
@@ -79,35 +106,89 @@ footer{text-align:center;padding:20px;color:#64748b}
 
 </div>
 
-<div id="adminArea" class="card hidden">
+<!-- ADMIN DASHBOARD -->
 
+<div id="adminArea" class="hidden">
+
+<div class="card">
 <h2>Admin Dashboard</h2>
 <p>Welcome, Administrator.</p>
 
+<h3>System Statistics</h3>
+
+<div class="stats">
+<div class="stat">
+<strong id="totalStudents">0</strong>
+<span>Total Students</span>
+</div>
+
+<div class="stat">
+<strong id="approvedStudents">0</strong>
+<span>Approved Students</span>
+</div>
+
+<div class="stat">
+<strong id="pendingStudents">0</strong>
+<span>Pending Students</span>
+</div>
+
+<div class="stat">
+<strong id="totalMaterials">0</strong>
+<span>Study Materials</span>
+</div>
+</div>
+
+<button class="secondary full" onclick="loadStatistics()">Refresh Statistics</button>
+</div>
+
+<!-- UPLOAD -->
+
+<div class="card">
 <h2>Upload Study Materials</h2>
 
 <input id="materialTitle" placeholder="Material Title">
 <input id="materialSubject" placeholder="Subject Name">
+
 <textarea id="materialDescription" placeholder="Description (optional)"></textarea>
+
 <input id="materialFile" type="file" accept=".pdf,application/pdf">
 
 <button class="full" id="uploadButton" onclick="uploadMaterial()">Upload PDF</button>
+
 <p id="uploadMessage"></p>
+</div>
 
-<hr>
+<!-- ADMIN MATERIALS -->
 
-<h2>All Study Materials</h2>
+<div class="card">
+<h2>Manage Study Materials</h2>
+
+<input id="adminSearch" placeholder="Search notes by title or subject..." oninput="renderMaterials('adminMaterials')">
+
+<select id="adminSubject" onchange="renderMaterials('adminMaterials')">
+<option value="">All Subjects</option>
+</select>
+
 <div id="adminMaterials">Loading notes...</div>
 
-<button class="full" onclick="loadMaterials('adminMaterials')">Refresh Materials</button>
+<button class="secondary full" onclick="loadMaterials('adminMaterials')">Refresh Materials</button>
+</div>
 
-<hr>
+<!-- STUDENTS -->
 
-<h2>Registered Students</h2>
+<div class="card">
+<h2>Student Management</h2>
+
+<input id="studentAdminSearch" placeholder="Search student by name or email..." oninput="renderStudents()">
+
 <div id="studentList">Loading students...</div>
 
-<button class="full" onclick="loadStudents()">Refresh Students</button>
+<button class="secondary full" onclick="loadStudents()">Refresh Students</button>
+</div>
+
+<div class="card">
 <button class="secondary full" onclick="logout()">Logout</button>
+</div>
 
 </div>
 
@@ -120,21 +201,18 @@ footer{text-align:center;padding:20px;color:#64748b}
 
 <script>
 
+// SUPABASE CONNECTION
+
 const SUPABASE_URL='https://gdvdwxvcyxzolagqmolp.supabase.co';
 const SUPABASE_KEY='sb_publishable_quWzIYk5v8p_9lRWBOp_VA_Ld72ox76';
 const BUCKET='Study_notes';
 
 const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
-function message(text){
- document.getElementById('authMessage').textContent=text;
-}
+let allMaterials=[];
+let allStudents=[];
 
-function escapeHTML(value){
- return String(value??'').replace(/[&<>"']/g,function(c){
-  return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
- });
-}
+// REGISTRATION
 
 async function register(){
 
@@ -172,17 +250,20 @@ async function register(){
  alert('Registration submitted. Your account is waiting for Admin approval.');
 }
 
+// LOGIN
+
 async function login(){
 
  const email=document.getElementById('loginEmail').value.trim();
  const password=document.getElementById('loginPassword').value;
+ const output=document.getElementById('authMessage');
 
  if(!email||!password){
-  message('Enter email and password.');
+  output.textContent='Enter email and password.';
   return;
  }
 
- message('Logging in...');
+ output.textContent='Logging in...';
 
  const {data,error}=await db.auth.signInWithPassword({
   email,
@@ -190,12 +271,14 @@ async function login(){
  });
 
  if(error){
-  message(error.message);
+  output.textContent=error.message;
   return;
  }
 
  await showDashboard(data.user);
 }
+
+// DASHBOARD
 
 async function showDashboard(user){
 
@@ -215,10 +298,13 @@ async function showDashboard(user){
  if(profile.role==='admin'){
 
   document.getElementById('authArea').classList.add('hidden');
+  document.getElementById('studentArea').classList.add('hidden');
   document.getElementById('adminArea').classList.remove('hidden');
 
+  await loadStatistics();
   await loadStudents();
   await loadMaterials('adminMaterials');
+
   return;
  }
 
@@ -228,14 +314,16 @@ async function showDashboard(user){
 
   document.getElementById('authArea').classList.remove('hidden');
 
-  message(profile.approval_status==='rejected'
+  document.getElementById('authMessage').textContent=
+   profile.approval_status==='rejected'
    ?'Your registration was rejected. Contact Admin.'
-   :'Your account is pending approval. Please wait.');
+   :'Your account is pending approval. Please wait.';
 
   return;
  }
 
  document.getElementById('authArea').classList.add('hidden');
+ document.getElementById('adminArea').classList.add('hidden');
  document.getElementById('studentArea').classList.remove('hidden');
 
  document.getElementById('studentName').textContent=profile.full_name||'Student';
@@ -244,6 +332,46 @@ async function showDashboard(user){
 
  await loadMaterials('studentMaterials');
 }
+
+// STATISTICS
+
+async function loadStatistics(){
+
+ const total=await db
+  .from('profiles')
+  .select('id',{count:'exact',head:true})
+  .eq('role','student');
+
+ const approved=await db
+  .from('profiles')
+  .select('id',{count:'exact',head:true})
+  .eq('role','student')
+  .eq('approval_status','approved');
+
+ const pending=await db
+  .from('profiles')
+  .select('id',{count:'exact',head:true})
+  .eq('role','student')
+  .eq('approval_status','pending');
+
+ const materials=await db
+  .from('study_materials')
+  .select('id',{count:'exact',head:true});
+
+ document.getElementById('totalStudents').textContent=
+  total.error?'Error':total.count??0;
+
+ document.getElementById('approvedStudents').textContent=
+  approved.error?'Error':approved.count??0;
+
+ document.getElementById('pendingStudents').textContent=
+  pending.error?'Error':pending.count??0;
+
+ document.getElementById('totalMaterials').textContent=
+  materials.error?'Error':materials.count??0;
+}
+
+// UPLOAD PDF
 
 async function uploadMaterial(){
 
@@ -273,61 +401,70 @@ async function uploadMaterial(){
  button.disabled=true;
  output.textContent='Uploading PDF...';
 
- const {data:sessionData}=await db.auth.getSession();
- const user=sessionData.session?.user;
+ try{
 
- if(!user){
-  output.textContent='Please login again.';
+  const {data:sessionData}=await db.auth.getSession();
+  const user=sessionData.session?.user;
+
+  if(!user){
+   output.textContent='Please login again.';
+   return;
+  }
+
+  const safeName=file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+  const filePath=user.id+'/'+Date.now()+'-'+safeName;
+
+  const {error:uploadError}=await db.storage
+   .from(BUCKET)
+   .upload(filePath,file,{
+    contentType:'application/pdf',
+    upsert:false
+   });
+
+  if(uploadError){
+   output.textContent='Upload failed: '+uploadError.message;
+   return;
+  }
+
+  const {error:insertError}=await db
+   .from('study_materials')
+   .insert({
+    title:title,
+    subject:subject,
+    description:description,
+    file_path:filePath,
+    created_by:user.id
+   });
+
+  if(insertError){
+
+   await db.storage.from(BUCKET).remove([filePath]);
+
+   output.textContent='Database error: '+insertError.message;
+   return;
+  }
+
+  output.textContent='PDF uploaded successfully!';
+
+  document.getElementById('materialTitle').value='';
+  document.getElementById('materialSubject').value='';
+  document.getElementById('materialDescription').value='';
+  document.getElementById('materialFile').value='';
+
+  await loadMaterials('adminMaterials');
+  await loadStatistics();
+
+ }catch(error){
+
+  output.textContent='Unexpected error: '+error.message;
+
+ }finally{
+
   button.disabled=false;
-  return;
  }
-
- const safeName=file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
- const filePath=user.id+'/'+Date.now()+'-'+safeName;
-
- const {error:uploadError}=await db.storage
-  .from(BUCKET)
-  .upload(filePath,file,{
-   contentType:'application/pdf',
-   upsert:false
-  });
-
- if(uploadError){
-  output.textContent='Upload failed: '+uploadError.message;
-  button.disabled=false;
-  return;
- }
-
- const {error:insertError}=await db
-  .from('study_materials')
-  .insert({
-   title:title,
-   subject:subject,
-   description:description,
-   file_path:filePath,
-   created_by:user.id
-  });
-
- if(insertError){
-
-  await db.storage.from(BUCKET).remove([filePath]);
-
-  output.textContent='Database error: '+insertError.message;
-  button.disabled=false;
-  return;
- }
-
- output.textContent='PDF uploaded successfully!';
-
- document.getElementById('materialTitle').value='';
- document.getElementById('materialSubject').value='';
- document.getElementById('materialDescription').value='';
- document.getElementById('materialFile').value='';
-
- button.disabled=false;
-
- await loadMaterials('adminMaterials');
 }
+
+// LOAD MATERIALS
 
 async function loadMaterials(target){
 
@@ -344,14 +481,76 @@ async function loadMaterials(target){
   return;
  }
 
- if(!data||data.length===0){
-  area.textContent='No study materials uploaded yet.';
+ allMaterials=data||[];
+
+ updateSubjectFilters();
+
+ renderMaterials(target);
+}
+
+// SUBJECT FILTERS
+
+function updateSubjectFilters(){
+
+ const subjects=[...new Set(
+  allMaterials.map(item=>item.subject).filter(Boolean)
+ )].sort();
+
+ ['adminSubject','studentSubject'].forEach(id=>{
+
+  const select=document.getElementById(id);
+  const oldValue=select.value;
+
+  select.innerHTML='<option value="">All Subjects</option>';
+
+  subjects.forEach(subject=>{
+
+   const option=document.createElement('option');
+   option.value=subject;
+   option.textContent=subject;
+   select.appendChild(option);
+
+  });
+
+  if(subjects.includes(oldValue)){
+   select.value=oldValue;
+  }
+
+ });
+}
+
+// SEARCH AND DISPLAY MATERIALS
+
+function renderMaterials(target){
+
+ const area=document.getElementById(target);
+
+ const isAdmin=target==='adminMaterials';
+
+ const search=document.getElementById(
+  isAdmin?'adminSearch':'studentSearch'
+ ).value.trim().toLowerCase();
+
+ const subjectFilter=document.getElementById(
+  isAdmin?'adminSubject':'studentSubject'
+ ).value;
+
+ const filtered=allMaterials.filter(item=>{
+
+  const text=(item.title+' '+item.subject+' '+(item.description||'')).toLowerCase();
+
+  return text.includes(search)&&
+   (!subjectFilter||item.subject===subjectFilter);
+ });
+
+ if(filtered.length===0){
+  area.textContent='No study materials found.';
   return;
  }
 
  area.innerHTML='';
 
- for(const item of data){
+ filtered.forEach(item=>{
 
   const box=document.createElement('div');
   box.className='material';
@@ -363,52 +562,111 @@ async function loadMaterials(target){
   subject.textContent='Subject: '+item.subject;
 
   const description=document.createElement('p');
-  description.textContent=item.description||'';
+  description.textContent=item.description||'No description provided.';
 
-  const button=document.createElement('button');
-  button.textContent='Open / Download PDF';
+  const openButton=document.createElement('button');
+  openButton.textContent='Open / Download PDF';
 
-  button.onclick=async()=>{
+  openButton.onclick=async()=>{
 
-   button.disabled=true;
-   button.textContent='Preparing PDF...';
+   openButton.disabled=true;
+   openButton.textContent='Preparing PDF...';
 
    const {data:linkData,error:linkError}=await db.storage
     .from(BUCKET)
     .createSignedUrl(item.file_path,300);
 
    if(linkError){
+
     alert('Unable to open PDF: '+linkError.message);
+
    }else{
-    window.open(linkData.signedUrl,'_blank','noopener');
+
+    const link=document.createElement('a');
+    link.href=linkData.signedUrl;
+    link.target='_blank';
+    link.rel='noopener';
+    link.click();
+
    }
 
-   button.disabled=false;
-   button.textContent='Open / Download PDF';
+   openButton.disabled=false;
+   openButton.textContent='Open / Download PDF';
   };
 
   box.appendChild(heading);
   box.appendChild(subject);
   box.appendChild(description);
-  box.appendChild(button);
+  box.appendChild(openButton);
 
-  if(target==='adminMaterials'){
+  if(isAdmin){
+
+   const editButton=document.createElement('button');
+   editButton.textContent='Edit Material';
+   editButton.className='success';
+
+   editButton.onclick=()=>editMaterial(item);
 
    const deleteButton=document.createElement('button');
-
    deleteButton.textContent='Delete PDF';
    deleteButton.className='danger';
 
-   deleteButton.onclick=()=>{
-    deleteMaterial(item.id,item.file_path);
-   };
+   deleteButton.onclick=()=>deleteMaterial(item.id,item.file_path);
 
+   box.appendChild(editButton);
    box.appendChild(deleteButton);
   }
 
   area.appendChild(box);
- }
+
+ });
 }
+
+// EDIT MATERIAL DETAILS
+
+async function editMaterial(item){
+
+ const newTitle=prompt('Enter new material title:',item.title);
+
+ if(newTitle===null)return;
+
+ const newSubject=prompt('Enter new subject:',item.subject);
+
+ if(newSubject===null)return;
+
+ const newDescription=prompt(
+  'Enter new description:',
+  item.description||''
+ );
+
+ if(newDescription===null)return;
+
+ if(!newTitle.trim()||!newSubject.trim()){
+  alert('Title and subject cannot be empty.');
+  return;
+ }
+
+ const {error}=await db
+  .from('study_materials')
+  .update({
+   title:newTitle.trim(),
+   subject:newSubject.trim(),
+   description:newDescription.trim()
+  })
+  .eq('id',item.id);
+
+ if(error){
+  alert('Update failed: '+error.message);
+  return;
+ }
+
+ alert('Material updated successfully!');
+
+ await loadMaterials('adminMaterials');
+ await loadStatistics();
+}
+
+// DELETE MATERIAL
 
 async function deleteMaterial(id,filePath){
 
@@ -440,14 +698,17 @@ async function deleteMaterial(id,filePath){
   .eq('id',id);
 
  if(databaseError){
-  alert('The PDF file was removed, but its database record could not be deleted: '+databaseError.message);
+  alert('PDF file was removed but database deletion failed: '+databaseError.message);
   return;
  }
 
  alert('PDF deleted successfully!');
 
  await loadMaterials('adminMaterials');
+ await loadStatistics();
 }
+
+// LOAD STUDENTS
 
 async function loadStudents(){
 
@@ -461,18 +722,40 @@ async function loadStudents(){
   .order('created_at',{ascending:false});
 
  if(error){
-  area.textContent=error.message;
+  area.textContent='Unable to load students: '+error.message;
   return;
  }
 
- if(!data||data.length===0){
+ allStudents=data||[];
+
+ renderStudents();
+ await loadStatistics();
+}
+
+// SEARCH AND DISPLAY STUDENTS
+
+function renderStudents(){
+
+ const area=document.getElementById('studentList');
+
+ const search=document.getElementById('studentAdminSearch')
+  .value.trim().toLowerCase();
+
+ const filtered=allStudents.filter(student=>{
+
+  const text=(student.full_name||'')+' '+(student.email||'');
+
+  return text.toLowerCase().includes(search);
+ });
+
+ if(filtered.length===0){
   area.textContent='No students found.';
   return;
  }
 
  area.innerHTML='';
 
- data.forEach(student=>{
+ filtered.forEach(student=>{
 
   const row=document.createElement('div');
   row.className='material';
@@ -483,39 +766,58 @@ async function loadStudents(){
   const email=document.createElement('p');
   email.textContent=student.email||'';
 
+  const phone=document.createElement('p');
+  phone.textContent='Phone: '+(student.phone||'Not provided');
+
   const status=document.createElement('p');
-  status.textContent='Status: '+(student.approval_status||'pending').toUpperCase();
+  const currentStatus=student.approval_status||'pending';
 
-  row.append(name,email,status);
+  status.textContent='Status: '+currentStatus.toUpperCase();
 
-  if(student.approval_status!=='approved'){
+  const badge=document.createElement('span');
+  badge.className='status '+currentStatus;
+  badge.textContent=currentStatus.toUpperCase();
+
+  row.append(name,email,phone,status,badge);
+
+  if(currentStatus!=='approved'){
 
    const approve=document.createElement('button');
 
    approve.textContent='Approve';
+   approve.className='success';
+
    approve.onclick=()=>changeApproval(student.id,'approved');
 
    row.appendChild(approve);
   }
 
-  if(student.approval_status!=='rejected'){
+  if(currentStatus!=='rejected'){
 
    const reject=document.createElement('button');
 
    reject.textContent='Reject';
-   reject.className='secondary';
+   reject.className='danger';
+
    reject.onclick=()=>changeApproval(student.id,'rejected');
 
    row.appendChild(reject);
   }
 
   area.appendChild(row);
+
  });
 }
 
+// APPROVE OR REJECT
+
 async function changeApproval(id,status){
 
- if(!confirm('Are you sure you want to '+status+' this student?'))return;
+ const confirmed=confirm(
+  'Are you sure you want to '+status+' this student?'
+ );
+
+ if(!confirmed)return;
 
  const {error}=await db
   .from('profiles')
@@ -524,20 +826,24 @@ async function changeApproval(id,status){
   .eq('role','student');
 
  if(error){
-  alert(error.message);
+  alert('Student update failed: '+error.message);
   return;
  }
 
- alert('Student status updated.');
+ alert('Student status updated successfully!');
 
  await loadStudents();
 }
+
+// LOGOUT
 
 async function logout(){
 
  await db.auth.signOut();
  location.reload();
 }
+
+// RESTORE SESSION
 
 async function checkSession(){
 
