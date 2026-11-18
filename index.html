@@ -6,6 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Surgeon_Mwaipopo Education</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <style>
 *{box-sizing:border-box}
 body{margin:0;font-family:Arial,sans-serif;background:#f1f5f9;color:#172554}
@@ -38,11 +39,15 @@ button:disabled{opacity:.5}
 .question{padding:15px;border:1px solid #cbd5e1;border-radius:9px;margin:12px 0}
 .question label{display:block;padding:8px;margin:5px 0;background:#f8fafc;border-radius:6px}
 .question input{width:auto;margin-right:8px}
+.rank-first{border:2px solid #eab308;background:#fffbeb}
+.rank-second{border:2px solid #94a3b8}
+.rank-third{border:2px solid #b45309}
 footer{text-align:center;padding:20px;color:#64748b}
 hr{border:0;border-top:1px solid #e2e8f0;margin:25px 0}
 @media(min-width:650px){.stats{grid-template-columns:repeat(5,1fr)}}
 </style>
 </head>
+
 <body>
 
 <header>
@@ -54,6 +59,7 @@ hr{border:0;border-top:1px solid #e2e8f0;margin:25px 0}
 
 <!-- AUTHENTICATION -->
 <div id="authArea">
+
 <div class="card">
 <h2>Student Registration</h2>
 <input id="fullName" placeholder="Full Name">
@@ -70,10 +76,12 @@ hr{border:0;border-top:1px solid #e2e8f0;margin:25px 0}
 <button class="full" onclick="login()">Login</button>
 <p id="authMessage"></p>
 </div>
+
 </div>
 
 <!-- STUDENT DASHBOARD -->
 <div id="studentArea" class="card hidden">
+
 <h2>Student Dashboard</h2>
 <p>Welcome, <strong id="studentName"></strong></p>
 <p id="studentEmail"></p>
@@ -113,9 +121,25 @@ hr{border:0;border-top:1px solid #e2e8f0;margin:25px 0}
 <div id="examQuestions"></div>
 <button class="success full" id="submitExamButton" onclick="submitExam()">Submit Examination</button>
 </div>
+
 <div id="examResult" class="message hidden"></div>
 
+<!-- STUDENT EXAM HISTORY -->
+<hr>
+<h2>My Exam History</h2>
+<p class="section-note">View your completed examinations, scores and submission dates.</p>
+<div id="studentExamHistory">Loading exam history...</div>
+<button class="secondary full" onclick="loadExamHistory()">Refresh Exam History</button>
+
+<!-- STUDENT TOP 10 -->
+<hr>
+<h2>Top 10 Students Ranking</h2>
+<p class="section-note">Ranking is based on average percentage from submitted examinations.</p>
+<div id="studentTopRanking">Loading ranking...</div>
+<button class="secondary full" onclick="loadTopRanking('studentTopRanking')">Refresh Ranking</button>
+
 <button class="secondary full" onclick="logout()">Logout</button>
+
 </div>
 
 <!-- ADMIN DASHBOARD -->
@@ -125,6 +149,7 @@ hr{border:0;border-top:1px solid #e2e8f0;margin:25px 0}
 <h2>Admin Dashboard</h2>
 <p>Welcome, Administrator.</p>
 <h3>System Statistics</h3>
+
 <div class="stats">
 <div class="stat"><strong id="totalStudents">0</strong><span>Total Students</span></div>
 <div class="stat"><strong id="approvedStudents">0</strong><span>Approved Students</span></div>
@@ -132,6 +157,7 @@ hr{border:0;border-top:1px solid #e2e8f0;margin:25px 0}
 <div class="stat"><strong id="totalMaterials">0</strong><span>Study Materials</span></div>
 <div class="stat"><strong id="totalPastPapers">0</strong><span>Past Papers</span></div>
 </div>
+
 <button class="secondary full" onclick="loadStatistics()">Refresh Statistics</button>
 </div>
 
@@ -186,6 +212,7 @@ hr{border:0;border-top:1px solid #e2e8f0;margin:25px 0}
 <!-- ONLINE EXAM ADMIN -->
 <div class="card">
 <h2>Online Examination Management</h2>
+
 <h3>Create Examination</h3>
 <input id="examTitle" placeholder="Examination Title">
 <input id="examCourse" value="Clinical Medicine" placeholder="Course">
@@ -224,6 +251,13 @@ hr{border:0;border-top:1px solid #e2e8f0;margin:25px 0}
 <h3>Student Examination Results</h3>
 <div id="adminExamResults">No results loaded.</div>
 <button class="secondary full" onclick="loadExamResults()">Refresh Results</button>
+
+<hr>
+<h3>Top 10 Students Ranking</h3>
+<p class="section-note">Best student performance across submitted examinations.</p>
+<div id="adminTopRanking">Loading ranking...</div>
+<button class="secondary full" onclick="loadTopRanking('adminTopRanking')">Refresh Top 10 Ranking</button>
+
 </div>
 
 <div class="card">
@@ -236,6 +270,7 @@ hr{border:0;border-top:1px solid #e2e8f0;margin:25px 0}
 <div class="card">
 <button class="secondary full" onclick="logout()">Logout</button>
 </div>
+
 </div>
 </div>
 
@@ -245,11 +280,13 @@ hr{border:0;border-top:1px solid #e2e8f0;margin:25px 0}
 </footer>
 
 <script>
+
 // SUPABASE CONNECTION
 const SUPABASE_URL='https://gdvdwxvcyxzolagqmolp.supabase.co';
 const SUPABASE_KEY='sb_publishable_quWzIYk5v8p_9lRWBOp_VA_Ld72ox76';
 const BUCKET='Study_notes';
 const PAST_PAPERS_BUCKET='past_papers';
+
 const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
 let allMaterials=[],allStudents=[],allPastPapers=[];
@@ -270,23 +307,45 @@ async function register(){
  const phone=el('phone').value.trim();
  const email=el('regEmail').value.trim();
  const password=el('regPassword').value;
- if(!fullName||!phone||!email||!password)return alert('Please fill in all fields.');
- if(password.length<6)return alert('Password must contain at least 6 characters.');
- const {error}=await db.auth.signUp({email,password,options:{data:{full_name:fullName,phone}}});
+
+ if(!fullName||!phone||!email||!password)
+  return alert('Please fill in all fields.');
+
+ if(password.length<6)
+  return alert('Password must contain at least 6 characters.');
+
+ const {error}=await db.auth.signUp({
+  email,password,
+  options:{data:{full_name:fullName,phone}}
+ });
+
  if(error)return alert(error.message);
+
  alert('Registration submitted. Your account is waiting for Admin approval.');
 }
 
 async function login(){
  const email=el('loginEmail').value.trim();
  const password=el('loginPassword').value;
- if(!email||!password){el('authMessage').textContent='Enter email and password.';return}
+
+ if(!email||!password){
+  el('authMessage').textContent='Enter email and password.';
+  return;
+ }
+
  el('authMessage').textContent='Logging in...';
+
  const {data,error}=await db.auth.signInWithPassword({email,password});
- if(error){el('authMessage').textContent=error.message;return}
+
+ if(error){
+  el('authMessage').textContent=error.message;
+  return;
+ }
+
  await showDashboard(data.user);
 }
 
+// DASHBOARD
 async function showDashboard(user){
  const {data:profile,error}=await db.from('profiles')
  .select('id,email,full_name,phone,role,approval_status')
@@ -294,39 +353,50 @@ async function showDashboard(user){
 
  if(error||!profile){
   alert('Profile not found: '+(error?.message||'Contact Admin.'));
-  await db.auth.signOut();location.reload();return;
+  await db.auth.signOut();
+  location.reload();
+  return;
  }
 
  if(profile.role==='admin'){
   el('authArea').classList.add('hidden');
   el('studentArea').classList.add('hidden');
   el('adminArea').classList.remove('hidden');
+
   await loadStatistics();
   await loadStudents();
   await loadMaterials('adminMaterials');
   await loadPastPapers('adminPastPapers');
   await loadExams();
+  await loadTopRanking('adminTopRanking');
+
   return;
  }
 
  if(profile.approval_status!=='approved'){
   await db.auth.signOut();
   el('authArea').classList.remove('hidden');
+
   el('authMessage').textContent=profile.approval_status==='rejected'
    ?'Your registration was rejected. Contact Admin.'
    :'Your account is pending approval.';
+
   return;
  }
 
  el('authArea').classList.add('hidden');
  el('adminArea').classList.add('hidden');
  el('studentArea').classList.remove('hidden');
+
  el('studentName').textContent=profile.full_name||'Student';
  el('studentEmail').textContent='Email: '+(profile.email||user.email);
  el('studentPhone').textContent='Phone: '+(profile.phone||'Not provided');
+
  await loadMaterials('studentMaterials');
  await loadPastPapers('studentPastPapers');
  await loadStudentExams();
+ await loadExamHistory();
+ await loadTopRanking('studentTopRanking');
 }
 
 // STATISTICS
@@ -338,20 +408,40 @@ async function loadStatistics(){
   db.from('study_materials').select('id',{count:'exact',head:true}),
   db.from('past_papers').select('id',{count:'exact',head:true})
  ];
+
  const results=await Promise.all(queries);
+
  ['totalStudents','approvedStudents','pendingStudents','totalMaterials','totalPastPapers']
- .forEach((id,i)=>el(id).textContent=results[i].error?'Error':results[i].count??0);
+ .forEach((id,i)=>{
+  el(id).textContent=results[i].error?'Error':results[i].count??0;
+ });
 }
 
 // PRIVATE PDF
 async function openPrivatePdf(bucket,path,button){
- if(button){button.disabled=true;button.textContent='Preparing PDF...'}
+ if(button){
+  button.disabled=true;
+  button.textContent='Preparing PDF...';
+ }
+
  try{
   const {data,error}=await db.storage.from(bucket).createSignedUrl(path,300);
-  if(error){alert('Unable to open PDF: '+error.message);return}
+
+  if(error){
+   alert('Unable to open PDF: '+error.message);
+   return;
+  }
+
   window.open(data.signedUrl,'_blank','noopener');
- }catch(error){alert(error.message)}
- finally{if(button){button.disabled=false;button.textContent='Open / Download PDF'}}
+
+ }catch(error){
+  alert(error.message);
+ }finally{
+  if(button){
+   button.disabled=false;
+   button.textContent='Open / Download PDF';
+  }
+ }
 }
 
 // STUDY MATERIALS
@@ -362,231 +452,586 @@ async function uploadMaterial(){
  const file=el('materialFile').files[0];
  const output=el('uploadMessage');
  const button=el('uploadButton');
- if(!title||!subject||!file){output.textContent='Enter title, subject and choose PDF.';return}
- if(!validPdf(file)){output.textContent='Only PDF files allowed.';return}
- if(file.size>20*1024*1024){output.textContent='Maximum file size is 20 MB.';return}
- button.disabled=true;output.textContent='Uploading...';
+
+ if(!title||!subject||!file){
+  output.textContent='Enter title, subject and choose PDF.';
+  return;
+ }
+
+ if(!validPdf(file)){
+  output.textContent='Only PDF files allowed.';
+  return;
+ }
+
+ if(file.size>20*1024*1024){
+  output.textContent='Maximum file size is 20 MB.';
+  return;
+ }
+
+ button.disabled=true;
+ output.textContent='Uploading...';
+
  let path=null;
+
  try{
   const {data:s}=await db.auth.getSession();
-  if(!s.session){output.textContent='Please login again.';return}
+
+  if(!s.session){
+   output.textContent='Please login again.';
+   return;
+  }
+
   path=s.session.user.id+'/'+Date.now()+'-'+safeFileName(file.name);
-  const {error}=await db.storage.from(BUCKET).upload(path,file,{contentType:'application/pdf'});
-  if(error){output.textContent=error.message;return}
+
+  const {error}=await db.storage.from(BUCKET).upload(path,file,{
+   contentType:'application/pdf'
+  });
+
+  if(error){
+   output.textContent=error.message;
+   return;
+  }
+
   const {error:insertError}=await db.from('study_materials').insert({
    title,subject,description,file_path:path,created_by:s.session.user.id
   });
-  if(insertError){await db.storage.from(BUCKET).remove([path]);output.textContent=insertError.message;return}
+
+  if(insertError){
+   await db.storage.from(BUCKET).remove([path]);
+   output.textContent=insertError.message;
+   return;
+  }
+
   output.textContent='PDF uploaded successfully!';
-  ['materialTitle','materialSubject','materialDescription','materialFile'].forEach(id=>el(id).value='');
-  await loadMaterials('adminMaterials');await loadStatistics();
- }catch(e){output.textContent=e.message}
- finally{button.disabled=false}
+
+  ['materialTitle','materialSubject','materialDescription','materialFile']
+   .forEach(id=>el(id).value='');
+
+  await loadMaterials('adminMaterials');
+  await loadStatistics();
+
+ }catch(e){
+  output.textContent=e.message;
+ }finally{
+  button.disabled=false;
+ }
 }
 
 async function loadMaterials(target){
- const area=el(target);area.textContent='Loading...';
+ const area=el(target);
+ area.textContent='Loading...';
+
  const {data,error}=await db.from('study_materials')
- .select('id,title,subject,description,file_path,created_at').order('created_at',{ascending:false});
- if(error){area.textContent=error.message;return}
- allMaterials=data||[];updateSubjectFilters();renderMaterials(target);
+ .select('id,title,subject,description,file_path,created_at')
+ .order('created_at',{ascending:false});
+
+ if(error){
+  area.textContent=error.message;
+  return;
+ }
+
+ allMaterials=data||[];
+ updateSubjectFilters();
+ renderMaterials(target);
 }
 
 function updateSubjectFilters(){
  const subjects=[...new Set(allMaterials.map(x=>x.subject).filter(Boolean))].sort();
+
  ['adminSubject','studentSubject'].forEach(id=>{
-  const s=el(id),old=s.value;s.innerHTML='<option value="">All Subjects</option>';
-  subjects.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;s.appendChild(o)});
+  const s=el(id);
+  const old=s.value;
+
+  s.innerHTML='<option value="">All Subjects</option>';
+
+  subjects.forEach(v=>{
+   const o=document.createElement('option');
+   o.value=v;
+   o.textContent=v;
+   s.appendChild(o);
+  });
+
   if(subjects.includes(old))s.value=old;
  });
 }
 
 function renderMaterials(target){
- const area=el(target),admin=target==='adminMaterials';
+ const area=el(target);
+ const admin=target==='adminMaterials';
+
  const search=el(admin?'adminSearch':'studentSearch').value.toLowerCase().trim();
  const filter=el(admin?'adminSubject':'studentSubject').value;
- const list=allMaterials.filter(x=>(x.title+' '+x.subject+' '+(x.description||'')).toLowerCase().includes(search)&&(!filter||x.subject===filter));
+
+ const list=allMaterials.filter(x=>
+  (x.title+' '+x.subject+' '+(x.description||'')).toLowerCase().includes(search)
+  &&(!filter||x.subject===filter)
+ );
+
  area.innerHTML='';
- if(!list.length){area.textContent='No study materials found.';return}
+
+ if(!list.length){
+  area.textContent='No study materials found.';
+  return;
+ }
+
  list.forEach(item=>{
-  const box=document.createElement('div');box.className='material';
-  const h=document.createElement('h3');h.textContent=item.title;
-  const p=document.createElement('p');p.textContent='Subject: '+item.subject;
-  const d=document.createElement('p');d.textContent=item.description||'No description.';
-  const open=document.createElement('button');open.textContent='Open / Download PDF';
+  const box=document.createElement('div');
+  box.className='material';
+
+  const h=document.createElement('h3');
+  h.textContent=item.title;
+
+  const p=document.createElement('p');
+  p.textContent='Subject: '+item.subject;
+
+  const d=document.createElement('p');
+  d.textContent=item.description||'No description.';
+
+  const open=document.createElement('button');
+  open.textContent='Open / Download PDF';
   open.onclick=()=>openPrivatePdf(BUCKET,item.file_path,open);
+
   box.append(h,p,d,open);
+
   if(admin){
-   const edit=document.createElement('button');edit.textContent='Edit Material';edit.className='success';edit.onclick=()=>editMaterial(item);
-   const del=document.createElement('button');del.textContent='Delete PDF';del.className='danger';del.onclick=()=>deleteMaterial(item.id,item.file_path);
+   const edit=document.createElement('button');
+   edit.textContent='Edit Material';
+   edit.className='success';
+   edit.onclick=()=>editMaterial(item);
+
+   const del=document.createElement('button');
+   del.textContent='Delete PDF';
+   del.className='danger';
+   del.onclick=()=>deleteMaterial(item.id,item.file_path);
+
    box.append(edit,del);
   }
+
   area.appendChild(box);
  });
 }
 
 async function editMaterial(item){
- const title=prompt('New title:',item.title);if(title===null)return;
- const subject=prompt('New subject:',item.subject);if(subject===null)return;
- const description=prompt('New description:',item.description||'');if(description===null)return;
- if(!title.trim()||!subject.trim())return alert('Title and subject required.');
- const {error}=await db.from('study_materials').update({title:title.trim(),subject:subject.trim(),description:description.trim()}).eq('id',item.id);
+ const title=prompt('New title:',item.title);
+ if(title===null)return;
+
+ const subject=prompt('New subject:',item.subject);
+ if(subject===null)return;
+
+ const description=prompt('New description:',item.description||'');
+ if(description===null)return;
+
+ if(!title.trim()||!subject.trim())
+  return alert('Title and subject required.');
+
+ const {error}=await db.from('study_materials')
+ .update({
+  title:title.trim(),
+  subject:subject.trim(),
+  description:description.trim()
+ }).eq('id',item.id);
+
  if(error)return alert(error.message);
- alert('Material updated!');await loadMaterials('adminMaterials');
+
+ alert('Material updated!');
+ await loadMaterials('adminMaterials');
 }
+
 async function deleteMaterial(id,path){
  if(!confirm('Permanently delete this PDF?'))return;
+
  const {error}=await db.storage.from(BUCKET).remove([path]);
+
  if(error)return alert(error.message);
+
  const {error:e}=await db.from('study_materials').delete().eq('id',id);
+
  if(e)return alert(e.message);
- alert('PDF deleted!');await loadMaterials('adminMaterials');await loadStatistics();
+
+ alert('PDF deleted!');
+ await loadMaterials('adminMaterials');
+ await loadStatistics();
 }
 
 // PAST PAPERS
 async function uploadPastPaper(){
- const title=el('paperTitle').value.trim(),course=el('paperCourse').value.trim();
- const subject=el('paperSubject').value.trim(),yearText=el('paperYear').value;
+ const title=el('paperTitle').value.trim();
+ const course=el('paperCourse').value.trim();
+ const subject=el('paperSubject').value.trim();
+ const yearText=el('paperYear').value;
  const description=el('paperDescription').value.trim();
- const paper=el('paperFile').files[0],marking=el('markingFile').files[0];
- const out=el('paperUploadMessage'),btn=el('paperUploadButton');
- if(!title||!course||!subject||!paper){out.textContent='Fill required fields and select paper PDF.';return}
- if(!validPdf(paper)||(marking&&!validPdf(marking))){out.textContent='Files must be PDFs.';return}
- if(paper.size>20*1024*1024||(marking&&marking.size>20*1024*1024)){out.textContent='Maximum file size is 20 MB each.';return}
+
+ const paper=el('paperFile').files[0];
+ const marking=el('markingFile').files[0];
+
+ const out=el('paperUploadMessage');
+ const btn=el('paperUploadButton');
+
+ if(!title||!course||!subject||!paper){
+  out.textContent='Fill required fields and select paper PDF.';
+  return;
+ }
+
+ if(!validPdf(paper)||(marking&&!validPdf(marking))){
+  out.textContent='Files must be PDFs.';
+  return;
+ }
+
+ if(paper.size>20*1024*1024||(marking&&marking.size>20*1024*1024)){
+  out.textContent='Maximum file size is 20 MB each.';
+  return;
+ }
+
  let year=null;
- if(yearText){year=Number(yearText);if(!Number.isInteger(year)||year<1900||year>2100){out.textContent='Invalid year.';return}}
- btn.disabled=true;out.textContent='Uploading...';
+
+ if(yearText){
+  year=Number(yearText);
+
+  if(!Number.isInteger(year)||year<1900||year>2100){
+   out.textContent='Invalid year.';
+   return;
+  }
+ }
+
+ btn.disabled=true;
+ out.textContent='Uploading...';
+
  let paths=[];
+
  try{
-  const {data:s}=await db.auth.getSession();if(!s.session){out.textContent='Login again.';return}
+  const {data:s}=await db.auth.getSession();
+
+  if(!s.session){
+   out.textContent='Login again.';
+   return;
+  }
+
   const folder=s.session.user.id+'/'+Date.now();
   const paperPath=folder+'/paper-'+safeFileName(paper.name);
-  let {error}=await db.storage.from(PAST_PAPERS_BUCKET).upload(paperPath,paper,{contentType:'application/pdf'});
-  if(error){out.textContent=error.message;return}paths.push(paperPath);
+
+  let {error}=await db.storage.from(PAST_PAPERS_BUCKET)
+   .upload(paperPath,paper,{contentType:'application/pdf'});
+
+  if(error){
+   out.textContent=error.message;
+   return;
+  }
+
+  paths.push(paperPath);
+
   let markingPath=null;
+
   if(marking){
    markingPath=folder+'/marking-'+safeFileName(marking.name);
-   const r=await db.storage.from(PAST_PAPERS_BUCKET).upload(markingPath,marking,{contentType:'application/pdf'});
-   if(r.error){await db.storage.from(PAST_PAPERS_BUCKET).remove(paths);out.textContent=r.error.message;return}
+
+   const r=await db.storage.from(PAST_PAPERS_BUCKET)
+    .upload(markingPath,marking,{contentType:'application/pdf'});
+
+   if(r.error){
+    await db.storage.from(PAST_PAPERS_BUCKET).remove(paths);
+    out.textContent=r.error.message;
+    return;
+   }
+
    paths.push(markingPath);
   }
+
   const {error:dbError}=await db.from('past_papers').insert({
    title,course,subject,exam_year:year,description,
-   paper_file_path:paperPath,marking_scheme_path:markingPath,created_by:s.session.user.id
+   paper_file_path:paperPath,
+   marking_scheme_path:markingPath,
+   created_by:s.session.user.id
   });
-  if(dbError){await db.storage.from(PAST_PAPERS_BUCKET).remove(paths);out.textContent=dbError.message;return}
+
+  if(dbError){
+   await db.storage.from(PAST_PAPERS_BUCKET).remove(paths);
+   out.textContent=dbError.message;
+   return;
+  }
+
   out.textContent='Past Paper uploaded successfully!';
-  ['paperTitle','paperSubject','paperYear','paperDescription','paperFile','markingFile'].forEach(id=>el(id).value='');
+
+  ['paperTitle','paperSubject','paperYear','paperDescription','paperFile','markingFile']
+   .forEach(id=>el(id).value='');
+
   el('paperCourse').value='Clinical Medicine';
-  await loadPastPapers('adminPastPapers');await loadStatistics();
- }catch(e){out.textContent=e.message}
- finally{btn.disabled=false}
+
+  await loadPastPapers('adminPastPapers');
+  await loadStatistics();
+
+ }catch(e){
+  out.textContent=e.message;
+ }finally{
+  btn.disabled=false;
+ }
 }
 
 async function loadPastPapers(target){
- const area=el(target);area.textContent='Loading...';
+ const area=el(target);
+ area.textContent='Loading...';
+
  const {data,error}=await db.from('past_papers')
  .select('id,title,course,subject,exam_year,description,paper_file_path,marking_scheme_path,created_at')
  .order('created_at',{ascending:false});
- if(error){area.textContent=error.message;return}
- allPastPapers=data||[];updatePaperFilters();renderPastPapers(target);
+
+ if(error){
+  area.textContent=error.message;
+  return;
+ }
+
+ allPastPapers=data||[];
+ updatePaperFilters();
+ renderPastPapers(target);
 }
+
 function updatePaperFilters(){
  const subjects=[...new Set(allPastPapers.map(x=>x.subject).filter(Boolean))].sort();
  const years=[...new Set(allPastPapers.map(x=>x.exam_year).filter(Boolean))].sort((a,b)=>b-a);
+
  ['adminPaperSubject','studentPaperSubject'].forEach(id=>{
-  const s=el(id),old=s.value;s.innerHTML='<option value="">All Subjects</option>';
-  subjects.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;s.appendChild(o)});
+  const s=el(id);
+  const old=s.value;
+
+  s.innerHTML='<option value="">All Subjects</option>';
+
+  subjects.forEach(v=>{
+   const o=document.createElement('option');
+   o.value=v;
+   o.textContent=v;
+   s.appendChild(o);
+  });
+
   if(subjects.includes(old))s.value=old;
  });
+
  ['adminPaperYear','studentPaperYear'].forEach(id=>{
-  const s=el(id),old=s.value;s.innerHTML='<option value="">All Years</option>';
-  years.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;s.appendChild(o)});
+  const s=el(id);
+  const old=s.value;
+
+  s.innerHTML='<option value="">All Years</option>';
+
+  years.forEach(v=>{
+   const o=document.createElement('option');
+   o.value=v;
+   o.textContent=v;
+   s.appendChild(o);
+  });
+
   if(years.map(String).includes(old))s.value=old;
  });
 }
+
 function renderPastPapers(target){
- const area=el(target),admin=target==='adminPastPapers';
+ const area=el(target);
+ const admin=target==='adminPastPapers';
+
  const search=el(admin?'adminPaperSearch':'studentPaperSearch').value.toLowerCase().trim();
  const subject=el(admin?'adminPaperSubject':'studentPaperSubject').value;
  const year=el(admin?'adminPaperYear':'studentPaperYear').value;
- const list=allPastPapers.filter(p=>(p.title+' '+p.course+' '+p.subject+' '+(p.exam_year||'')+' '+(p.description||'')).toLowerCase().includes(search)&&(!subject||p.subject===subject)&&(!year||String(p.exam_year)===year));
+
+ const list=allPastPapers.filter(p=>
+  (p.title+' '+p.course+' '+p.subject+' '+(p.exam_year||'')+' '+(p.description||'')).toLowerCase().includes(search)
+  &&(!subject||p.subject===subject)
+  &&(!year||String(p.exam_year)===year)
+ );
+
  area.innerHTML='';
- if(!list.length){area.textContent='No past papers found.';return}
+
+ if(!list.length){
+  area.textContent='No past papers found.';
+  return;
+ }
+
  list.forEach(p=>{
-  const box=document.createElement('div');box.className='material';
-  const h=document.createElement('h3');h.textContent=p.title;
-  const info=document.createElement('p');info.textContent='Course: '+p.course+' | Subject: '+p.subject+' | Year: '+(p.exam_year||'Not specified');
-  const open=document.createElement('button');open.textContent='Open / Download Examination PDF';open.onclick=()=>openPrivatePdf(PAST_PAPERS_BUCKET,p.paper_file_path,open);
+  const box=document.createElement('div');
+  box.className='material';
+
+  const h=document.createElement('h3');
+  h.textContent=p.title;
+
+  const info=document.createElement('p');
+  info.textContent='Course: '+p.course+' | Subject: '+p.subject+' | Year: '+(p.exam_year||'Not specified');
+
+  const open=document.createElement('button');
+  open.textContent='Open / Download Examination PDF';
+  open.onclick=()=>openPrivatePdf(PAST_PAPERS_BUCKET,p.paper_file_path,open);
+
   box.append(h,info,open);
-  if(p.marking_scheme_path){const m=document.createElement('button');m.className='success';m.textContent='Open / Download Marking Scheme';m.onclick=()=>openPrivatePdf(PAST_PAPERS_BUCKET,p.marking_scheme_path,m);box.appendChild(m)}
-  else{const n=document.createElement('p');n.textContent='Marking scheme has not been uploaded.';box.appendChild(n)}
+
+  if(p.marking_scheme_path){
+   const m=document.createElement('button');
+   m.className='success';
+   m.textContent='Open / Download Marking Scheme';
+   m.onclick=()=>openPrivatePdf(PAST_PAPERS_BUCKET,p.marking_scheme_path,m);
+   box.appendChild(m);
+  }else{
+   const n=document.createElement('p');
+   n.textContent='Marking scheme has not been uploaded.';
+   box.appendChild(n);
+  }
+
   if(admin){
-   const edit=document.createElement('button');edit.textContent='Edit Past Paper';edit.onclick=()=>editPastPaper(p);
-   const del=document.createElement('button');del.className='danger';del.textContent='Delete Past Paper';del.onclick=()=>deletePastPaper(p);
+   const edit=document.createElement('button');
+   edit.textContent='Edit Past Paper';
+   edit.onclick=()=>editPastPaper(p);
+
+   const del=document.createElement('button');
+   del.className='danger';
+   del.textContent='Delete Past Paper';
+   del.onclick=()=>deletePastPaper(p);
+
    box.append(edit,del);
   }
+
   area.appendChild(box);
  });
 }
+
 async function editPastPaper(p){
- const title=prompt('Title:',p.title);if(title===null)return;
- const course=prompt('Course:',p.course);if(course===null)return;
- const subject=prompt('Subject:',p.subject);if(subject===null)return;
- const y=prompt('Year:',p.exam_year||'');if(y===null)return;
- const description=prompt('Description:',p.description||'');if(description===null)return;
+ const title=prompt('Title:',p.title);
+ if(title===null)return;
+
+ const course=prompt('Course:',p.course);
+ if(course===null)return;
+
+ const subject=prompt('Subject:',p.subject);
+ if(subject===null)return;
+
+ const y=prompt('Year:',p.exam_year||'');
+ if(y===null)return;
+
+ const description=prompt('Description:',p.description||'');
+ if(description===null)return;
+
  const year=y.trim()?Number(y):null;
- if(!title.trim()||!course.trim()||!subject.trim()||(year!==null&&(!Number.isInteger(year)||year<1900||year>2100)))return alert('Check the entered details.');
- const {error}=await db.from('past_papers').update({title:title.trim(),course:course.trim(),subject:subject.trim(),exam_year:year,description}).eq('id',p.id);
+
+ if(!title.trim()||!course.trim()||!subject.trim()||
+  (year!==null&&(!Number.isInteger(year)||year<1900||year>2100)))
+  return alert('Check the entered details.');
+
+ const {error}=await db.from('past_papers').update({
+  title:title.trim(),
+  course:course.trim(),
+  subject:subject.trim(),
+  exam_year:year,
+  description
+ }).eq('id',p.id);
+
  if(error)return alert(error.message);
- alert('Past Paper updated!');await loadPastPapers('adminPastPapers');
+
+ alert('Past Paper updated!');
+ await loadPastPapers('adminPastPapers');
 }
+
 async function deletePastPaper(p){
  if(!confirm('Delete this Past Paper and its Marking Scheme?'))return;
- const paths=[p.paper_file_path];if(p.marking_scheme_path)paths.push(p.marking_scheme_path);
+
+ const paths=[p.paper_file_path];
+
+ if(p.marking_scheme_path)paths.push(p.marking_scheme_path);
+
  const {error}=await db.storage.from(PAST_PAPERS_BUCKET).remove(paths);
+
  if(error)return alert(error.message);
+
  const {error:e}=await db.from('past_papers').delete().eq('id',p.id);
+
  if(e)return alert(e.message);
- alert('Past Paper deleted!');await loadPastPapers('adminPastPapers');await loadStatistics();
+
+ alert('Past Paper deleted!');
+ await loadPastPapers('adminPastPapers');
+ await loadStatistics();
 }
 
 // STUDENT MANAGEMENT
 async function loadStudents(){
- const area=el('studentList');area.textContent='Loading students...';
- const {data,error}=await db.from('profiles').select('id,full_name,email,phone,approval_status').eq('role','student').order('created_at',{ascending:false});
- if(error){area.textContent=error.message;return}
- allStudents=data||[];renderStudents();await loadStatistics();
+ const area=el('studentList');
+ area.textContent='Loading students...';
+
+ const {data,error}=await db.from('profiles')
+ .select('id,full_name,email,phone,approval_status')
+ .eq('role','student')
+ .order('created_at',{ascending:false});
+
+ if(error){
+  area.textContent=error.message;
+  return;
+ }
+
+ allStudents=data||[];
+ renderStudents();
+ await loadStatistics();
 }
+
 function renderStudents(){
- const area=el('studentList'),search=el('studentAdminSearch').value.toLowerCase().trim();
- const list=allStudents.filter(s=>((s.full_name||'')+' '+(s.email||'')).toLowerCase().includes(search));
+ const area=el('studentList');
+ const search=el('studentAdminSearch').value.toLowerCase().trim();
+
+ const list=allStudents.filter(s=>
+  ((s.full_name||'')+' '+(s.email||'')).toLowerCase().includes(search)
+ );
+
  area.innerHTML='';
- if(!list.length){area.textContent='No students found.';return}
+
+ if(!list.length){
+  area.textContent='No students found.';
+  return;
+ }
+
  list.forEach(s=>{
-  const box=document.createElement('div');box.className='material';
-  const name=document.createElement('strong');name.textContent=s.full_name||'Student';
-  const email=document.createElement('p');email.textContent=s.email||'';
-  const phone=document.createElement('p');phone.textContent='Phone: '+(s.phone||'Not provided');
-  const status=document.createElement('p');status.textContent='Status: '+(s.approval_status||'pending').toUpperCase();
+  const box=document.createElement('div');
+  box.className='material';
+
+  const name=document.createElement('strong');
+  name.textContent=s.full_name||'Student';
+
+  const email=document.createElement('p');
+  email.textContent=s.email||'';
+
+  const phone=document.createElement('p');
+  phone.textContent='Phone: '+(s.phone||'Not provided');
+
+  const status=document.createElement('p');
+  status.textContent='Status: '+(s.approval_status||'pending').toUpperCase();
+
   box.append(name,email,phone,status);
-  if(s.approval_status!=='approved'){const b=document.createElement('button');b.className='success';b.textContent='Approve';b.onclick=()=>changeApproval(s.id,'approved');box.appendChild(b)}
-  if(s.approval_status!=='rejected'){const b=document.createElement('button');b.className='danger';b.textContent='Reject';b.onclick=()=>changeApproval(s.id,'rejected');box.appendChild(b)}
+
+  if(s.approval_status!=='approved'){
+   const b=document.createElement('button');
+   b.className='success';
+   b.textContent='Approve';
+   b.onclick=()=>changeApproval(s.id,'approved');
+   box.appendChild(b);
+  }
+
+  if(s.approval_status!=='rejected'){
+   const b=document.createElement('button');
+   b.className='danger';
+   b.textContent='Reject';
+   b.onclick=()=>changeApproval(s.id,'rejected');
+   box.appendChild(b);
+  }
+
   area.appendChild(box);
  });
 }
+
 async function changeApproval(id,status){
  if(!confirm('Are you sure you want to '+status+' this student?'))return;
- const {error}=await db.from('profiles').update({approval_status:status}).eq('id',id).eq('role','student');
+
+ const {error}=await db.from('profiles')
+ .update({approval_status:status})
+ .eq('id',id)
+ .eq('role','student');
+
  if(error)return alert(error.message);
- alert('Student status updated!');await loadStudents();
+
+ alert('Student status updated!');
+ await loadStudents();
 }
 
-// =====================================
 // ONLINE EXAMINATION SYSTEM
-// =====================================
 
-// CREATE EXAM
 async function createExam(){
  const title=el('examTitle').value.trim();
  const course=el('examCourse').value.trim();
@@ -594,125 +1039,253 @@ async function createExam(){
  const duration=Number(el('examDuration').value);
  const description=el('examDescription').value.trim();
  const out=el('examAdminMessage');
- if(!title||!course||!subject||!Number.isInteger(duration)||duration<1){out.textContent='Enter valid title, course, subject and duration.';return}
+
+ if(!title||!course||!subject||!Number.isInteger(duration)||duration<1){
+  out.textContent='Enter valid title, course, subject and duration.';
+  return;
+ }
+
  const {data:s}=await db.auth.getSession();
- if(!s.session){out.textContent='Please login again.';return}
+
+ if(!s.session){
+  out.textContent='Please login again.';
+  return;
+ }
+
  const {error}=await db.from('exams').insert({
-  title,course,subject,description,duration_minutes:duration,
-  total_marks:0,status:'draft',created_by:s.session.user.id
+  title,course,subject,description,
+  duration_minutes:duration,
+  total_marks:0,
+  status:'draft',
+  created_by:s.session.user.id
  });
- if(error){out.textContent='Create exam failed: '+error.message;return}
+
+ if(error){
+  out.textContent='Create exam failed: '+error.message;
+  return;
+ }
+
  out.textContent='Examination created successfully. Add questions below.';
+
  ['examTitle','examSubject','examDescription'].forEach(id=>el(id).value='');
+
  await loadExams();
 }
 
-// LOAD EXAMS FOR ADMIN
 async function loadExams(){
  const {data,error}=await db.from('exams')
  .select('id,title,course,subject,description,duration_minutes,total_marks,status,created_at')
  .order('created_at',{ascending:false});
- if(error){el('adminExams').textContent=error.message;return}
+
+ if(error){
+  el('adminExams').textContent=error.message;
+  return;
+ }
+
  allExams=data||[];
  renderAdminExams();
  updateExamSelect();
 }
+
 function renderAdminExams(){
- const area=el('adminExams');area.innerHTML='';
- if(!allExams.length){area.textContent='No examinations created yet.';return}
+ const area=el('adminExams');
+ area.innerHTML='';
+
+ if(!allExams.length){
+  area.textContent='No examinations created yet.';
+  return;
+ }
+
  allExams.forEach(exam=>{
-  const box=document.createElement('div');box.className='material';
-  const h=document.createElement('h3');h.textContent=exam.title;
-  const p=document.createElement('p');p.textContent=exam.course+' | '+exam.subject;
-  const d=document.createElement('p');d.textContent='Duration: '+exam.duration_minutes+' minutes | Marks: '+exam.total_marks+' | Status: '+exam.status.toUpperCase();
+  const box=document.createElement('div');
+  box.className='material';
+
+  const h=document.createElement('h3');
+  h.textContent=exam.title;
+
+  const p=document.createElement('p');
+  p.textContent=exam.course+' | '+exam.subject;
+
+  const d=document.createElement('p');
+  d.textContent='Duration: '+exam.duration_minutes+' minutes | Marks: '+exam.total_marks+' | Status: '+exam.status.toUpperCase();
+
   box.append(h,p,d);
+
   const publish=document.createElement('button');
   publish.textContent=exam.status==='published'?'Close Exam':'Publish Exam';
   publish.className=exam.status==='published'?'danger':'success';
   publish.onclick=()=>changeExamStatus(exam.id,exam.status==='published'?'closed':'published');
-  const draft=document.createElement('button');draft.textContent='Set Draft';draft.className='secondary';
+
+  const draft=document.createElement('button');
+  draft.textContent='Set Draft';
+  draft.className='secondary';
   draft.onclick=()=>changeExamStatus(exam.id,'draft');
-  box.append(publish,draft);area.appendChild(box);
+
+  box.append(publish,draft);
+  area.appendChild(box);
  });
 }
+
 function updateExamSelect(){
- const select=el('questionExam'),old=select.value;
+ const select=el('questionExam');
+ const old=select.value;
+
  select.innerHTML='<option value="">Select Examination</option>';
+
  allExams.forEach(x=>{
-  const o=document.createElement('option');o.value=x.id;o.textContent=x.title+' ('+x.status+')';select.appendChild(o);
+  const o=document.createElement('option');
+  o.value=x.id;
+  o.textContent=x.title+' ('+x.status+')';
+  select.appendChild(o);
  });
+
  if(allExams.some(x=>x.id===old))select.value=old;
 }
+
 async function changeExamStatus(id,status){
  const {error}=await db.from('exams').update({status}).eq('id',id);
+
  if(error)return alert('Status update failed: '+error.message);
- alert('Examination status changed to '+status+'.');await loadExams();
+
+ alert('Examination status changed to '+status+'.');
+ await loadExams();
 }
 
 // ADD QUESTION AND PRIVATE ANSWER KEY
 async function addExamQuestion(){
  const examId=el('questionExam').value;
  const question=el('questionText').value.trim();
- const A=el('optionA').value.trim(),B=el('optionB').value.trim();
- const C=el('optionC').value.trim(),D=el('optionD').value.trim();
+
+ const A=el('optionA').value.trim();
+ const B=el('optionB').value.trim();
+ const C=el('optionC').value.trim();
+ const D=el('optionD').value.trim();
+
  const correct=el('correctOption').value;
  const marks=Number(el('questionMarks').value);
  const out=el('questionMessage');
- if(!examId||!question||!A||!B||!C||!D||!correct||!Number.isInteger(marks)||marks<1){
-  out.textContent='Complete all question fields and select the correct answer.';return;
+
+ if(!examId||!question||!A||!B||!C||!D||!correct||
+  !Number.isInteger(marks)||marks<1){
+  out.textContent='Complete all question fields and select the correct answer.';
+  return;
  }
+
  const {count,error:countError}=await db.from('exam_questions')
- .select('id',{count:'exact',head:true}).eq('exam_id',examId);
- if(countError){out.textContent=countError.message;return}
+ .select('id',{count:'exact',head:true})
+ .eq('exam_id',examId);
+
+ if(countError){
+  out.textContent=countError.message;
+  return;
+ }
+
  const number=(count||0)+1;
+
  const {data:q,error}=await db.from('exam_questions').insert({
-  exam_id:examId,question_number:number,question_text:question,
-  option_a:A,option_b:B,option_c:C,option_d:D,marks
+  exam_id:examId,
+  question_number:number,
+  question_text:question,
+  option_a:A,
+  option_b:B,
+  option_c:C,
+  option_d:D,
+  marks
  }).select('id').single();
- if(error){out.textContent='Question save failed: '+error.message;return}
+
+ if(error){
+  out.textContent='Question save failed: '+error.message;
+  return;
+ }
+
  const {error:keyError}=await db.from('exam_answer_keys').insert({
-  question_id:q.id,correct_option:correct
+  question_id:q.id,
+  correct_option:correct
  });
+
  if(keyError){
   await db.from('exam_questions').delete().eq('id',q.id);
-  out.textContent='Answer key save failed: '+keyError.message;return;
+  out.textContent='Answer key save failed: '+keyError.message;
+  return;
  }
+
  const exam=allExams.find(x=>x.id===examId);
  const newTotal=(exam?.total_marks||0)+marks;
- const {error:updateError}=await db.from('exams').update({total_marks:newTotal}).eq('id',examId);
- if(updateError){out.textContent='Question saved, but total marks update failed: '+updateError.message;return}
+
+ const {error:updateError}=await db.from('exams')
+ .update({total_marks:newTotal})
+ .eq('id',examId);
+
+ if(updateError){
+  out.textContent='Question saved, but total marks update failed: '+updateError.message;
+  return;
+ }
+
  out.textContent='Question '+number+' saved successfully!';
- ['questionText','optionA','optionB','optionC','optionD'].forEach(id=>el(id).value='');
- el('correctOption').value='';el('questionMarks').value=1;
+
+ ['questionText','optionA','optionB','optionC','optionD']
+ .forEach(id=>el(id).value='');
+
+ el('correctOption').value='';
+ el('questionMarks').value=1;
+
  await loadExams();
 }
 
 // STUDENT EXAM LIST
 async function loadStudentExams(){
- const area=el('studentExams');area.textContent='Loading examinations...';
+ const area=el('studentExams');
+ area.textContent='Loading examinations...';
+
  const {data,error}=await db.from('exams')
  .select('id,title,course,subject,description,duration_minutes,total_marks,status')
- .eq('status','published').order('created_at',{ascending:false});
- if(error){area.textContent='Unable to load examinations: '+error.message;return}
+ .eq('status','published')
+ .order('created_at',{ascending:false});
+
+ if(error){
+  area.textContent='Unable to load examinations: '+error.message;
+  return;
+ }
+
  area.innerHTML='';
- if(!data?.length){area.textContent='No published examinations available.';return}
+
+ if(!data?.length){
+  area.textContent='No published examinations available.';
+  return;
+ }
+
  for(const exam of data){
   const {data:attempt}=await db.from('exam_attempts')
    .select('id,status,score,total_marks')
-   .eq('exam_id',exam.id).maybeSingle();
-  const box=document.createElement('div');box.className='material';
-  const h=document.createElement('h3');h.textContent=exam.title;
-  const p=document.createElement('p');p.textContent=exam.course+' | '+exam.subject;
-  const d=document.createElement('p');d.textContent='Duration: '+exam.duration_minutes+' minutes | Total marks: '+exam.total_marks;
+   .eq('exam_id',exam.id)
+   .maybeSingle();
+
+  const box=document.createElement('div');
+  box.className='material';
+
+  const h=document.createElement('h3');
+  h.textContent=exam.title;
+
+  const p=document.createElement('p');
+  p.textContent=exam.course+' | '+exam.subject;
+
+  const d=document.createElement('p');
+  d.textContent='Duration: '+exam.duration_minutes+' minutes | Total marks: '+exam.total_marks;
+
   box.append(h,p,d);
+
   if(attempt?.status==='submitted'){
-   const result=document.createElement('p');result.textContent='Completed. Your score: '+attempt.score+'/'+attempt.total_marks;
+   const result=document.createElement('p');
+   result.textContent='Completed. Your score: '+attempt.score+'/'+attempt.total_marks;
    box.appendChild(result);
   }else{
-   const start=document.createElement('button');start.textContent=attempt?'Resume Examination':'Start Examination';
-   start.className='success';start.onclick=()=>startExam(exam);
+   const start=document.createElement('button');
+   start.textContent=attempt?'Resume Examination':'Start Examination';
+   start.className='success';
+   start.onclick=()=>startExam(exam);
    box.appendChild(start);
   }
+
   area.appendChild(box);
  }
 }
@@ -720,91 +1293,160 @@ async function loadStudentExams(){
 // START EXAM
 async function startExam(exam){
  if(activeAttempt)return alert('An examination is already open.');
- const result=el('examResult');result.classList.add('hidden');
- const {data:attemptId,error:startError}=await db.rpc('start_exam',{p_exam_id:exam.id});
- if(startError)return alert('Unable to start exam: '+startError.message);
+
+ const result=el('examResult');
+ result.classList.add('hidden');
+
+ const {data:attemptId,error:startError}=await db.rpc('start_exam',{
+  p_exam_id:exam.id
+ });
+
+ if(startError)
+  return alert('Unable to start exam: '+startError.message);
+
  const {data:attempt,error}=await db.from('exam_attempts')
- .select('id,started_at,status').eq('id',attemptId).single();
+ .select('id,started_at,status')
+ .eq('id',attemptId)
+ .single();
+
  if(error)return alert(error.message);
- if(attempt.status==='submitted')return alert('This examination has already been submitted.');
+
+ if(attempt.status==='submitted')
+  return alert('This examination has already been submitted.');
+
  const {data:questions,error:qError}=await db.from('exam_questions')
  .select('id,question_number,question_text,option_a,option_b,option_c,option_d,marks')
- .eq('exam_id',exam.id).order('question_number');
+ .eq('exam_id',exam.id)
+ .order('question_number');
+
  if(qError)return alert(qError.message);
- if(!questions?.length)return alert('This examination has no questions yet.');
- activeAttempt=attemptId;activeExam=exam;currentQuestions=questions;
+
+ if(!questions?.length)
+  return alert('This examination has no questions yet.');
+
+ activeAttempt=attemptId;
+ activeExam=exam;
+ currentQuestions=questions;
+
  el('takeExamArea').classList.remove('hidden');
  el('activeExamTitle').textContent=exam.title;
+
  renderExamQuestions();
  startExamTimer(attempt.started_at,exam.duration_minutes);
+
  el('takeExamArea').scrollIntoView({behavior:'smooth'});
 }
+
 function renderExamQuestions(){
- const area=el('examQuestions');area.innerHTML='';
+ const area=el('examQuestions');
+ area.innerHTML='';
+
  currentQuestions.forEach((q,index)=>{
-  const box=document.createElement('div');box.className='question';
-  const h=document.createElement('h3');h.textContent=(index+1)+'. '+q.question_text+' ('+q.marks+' marks)';
+  const box=document.createElement('div');
+  box.className='question';
+
+  const h=document.createElement('h3');
+  h.textContent=(index+1)+'. '+q.question_text+' ('+q.marks+' marks)';
+
   box.appendChild(h);
-  [['A',q.option_a],['B',q.option_b],['C',q.option_c],['D',q.option_d]].forEach(([letter,value])=>{
+
+  [['A',q.option_a],['B',q.option_b],['C',q.option_c],['D',q.option_d]]
+  .forEach(([letter,value])=>{
    const label=document.createElement('label');
    const radio=document.createElement('input');
-   radio.type='radio';radio.name='answer_'+q.id;radio.value=letter;
+
+   radio.type='radio';
+   radio.name='answer_'+q.id;
+   radio.value=letter;
+
    label.append(radio,document.createTextNode(letter+'. '+value));
    box.appendChild(label);
   });
+
   area.appendChild(box);
  });
 }
+
 function startExamTimer(startedAt,minutes){
  clearInterval(examTimerInterval);
+
  const deadline=new Date(startedAt).getTime()+minutes*60000;
  examDeadline=deadline;
+
  function tick(){
   const remaining=Math.max(0,deadline-Date.now());
+
   const mins=Math.floor(remaining/60000);
   const secs=Math.floor((remaining%60000)/1000);
+
   el('examTimer').textContent='Time remaining: '+mins+':'+String(secs).padStart(2,'0');
+
   if(remaining<=0){
    clearInterval(examTimerInterval);
    el('examTimer').textContent='Time expired. Submitting examination...';
    submitExam(true);
   }
  }
- tick();examTimerInterval=setInterval(tick,1000);
+
+ tick();
+ examTimerInterval=setInterval(tick,1000);
 }
 
 // SUBMIT AND AUTO MARK
 async function submitExam(auto=false){
  if(!activeAttempt)return;
- if(!auto&&!confirm('Are you sure you want to submit your examination?'))return;
- const button=el('submitExamButton');button.disabled=true;
+
+ if(!auto&&!confirm('Are you sure you want to submit your examination?'))
+  return;
+
+ const button=el('submitExamButton');
+ button.disabled=true;
+
  clearInterval(examTimerInterval);
+
  const answers=currentQuestions.map(q=>{
   const selected=document.querySelector('input[name="answer_'+q.id+'"]:checked');
-  return {question_id:q.id,selected_option:selected?selected.value:null};
+
+  return {
+   question_id:q.id,
+   selected_option:selected?selected.value:null
+  };
  });
+
  const {data,error}=await db.rpc('submit_exam',{
-  p_attempt_id:activeAttempt,p_answers:answers
+  p_attempt_id:activeAttempt,
+  p_answers:answers
  });
- button.disabled=false;
+
  if(error){
+  button.disabled=false;
   el('examTimer').textContent='Submission failed: '+error.message;
   return;
  }
- activeAttempt=null;activeExam=null;currentQuestions=[];
+
+ button.disabled=false;
+
+ activeAttempt=null;
+ activeExam=null;
+ currentQuestions=[];
+
  el('takeExamArea').classList.add('hidden');
- const result=el('examResult');result.classList.remove('hidden');
+
+ const result=el('examResult');
+ result.classList.remove('hidden');
  result.textContent='Examination submitted successfully. Your result: '+data.score+' / '+data.total_marks+' marks.';
+
  await loadStudentExams();
+ await loadExamHistory();
+ await loadTopRanking('studentTopRanking');
 }
 
-// ADMIN RESULTS - FIXED
+// ADMIN EXAM RESULTS
 async function loadExamResults(){
  const area=el('adminExamResults');
  area.textContent='Loading results...';
 
  try{
-  // Load submitted attempts and exam titles first.
   const {data:attempts,error:attemptError}=await db
    .from('exam_attempts')
    .select('id,exam_id,student_id,score,total_marks,status,submitted_at,exams(title)')
@@ -820,8 +1462,6 @@ async function loadExamResults(){
    return;
   }
 
-  // Load student profiles separately because the foreign key
-  // connects exam_attempts to auth.users, not public.profiles.
   const studentIds=[
    ...new Set(attempts.map(r=>r.student_id).filter(Boolean))
   ];
@@ -833,13 +1473,12 @@ async function loadExamResults(){
 
   if(studentError)throw studentError;
 
-  // Match each student profile using the student ID.
   const studentMap={};
+
   (students||[]).forEach(s=>{
    studentMap[s.id]=s;
   });
 
-  // Display each examination result.
   attempts.forEach(r=>{
    const student=studentMap[r.student_id];
 
@@ -874,18 +1513,157 @@ async function loadExamResults(){
  }
 }
 
+// =====================================
+// STUDENT EXAM HISTORY
+// =====================================
+
+async function loadExamHistory(){
+ const area=el('studentExamHistory');
+ area.textContent='Loading examination history...';
+
+ try{
+  const {data:sessionData,error:sessionError}=await db.auth.getSession();
+
+  if(sessionError)throw sessionError;
+
+  const user=sessionData.session?.user;
+
+  if(!user){
+   area.textContent='Please login again.';
+   return;
+  }
+
+  const {data,error}=await db.from('exam_attempts')
+   .select('id,exam_id,score,total_marks,status,started_at,submitted_at,exams(title,subject,course)')
+   .eq('student_id',user.id)
+   .eq('status','submitted')
+   .order('submitted_at',{ascending:false});
+
+  if(error)throw error;
+
+  area.innerHTML='';
+
+  if(!data||data.length===0){
+   area.textContent='You have not completed any examination yet.';
+   return;
+  }
+
+  data.forEach((attempt,index)=>{
+   const box=document.createElement('div');
+   box.className='material';
+
+   const title=document.createElement('h3');
+   title.textContent=(index+1)+'. '+(attempt.exams?.title||'Examination');
+
+   const subject=document.createElement('p');
+   subject.textContent='Subject: '+(attempt.exams?.subject||'Not specified');
+
+   const course=document.createElement('p');
+   course.textContent='Course: '+(attempt.exams?.course||'Not specified');
+
+   const score=document.createElement('p');
+   score.textContent='Your Score: '+attempt.score+'/'+attempt.total_marks;
+
+   const percentage=document.createElement('p');
+
+   const percent=attempt.total_marks>0
+    ?((attempt.score/attempt.total_marks)*100).toFixed(2)
+    :'0.00';
+
+   percentage.textContent='Percentage: '+percent+'%';
+
+   const date=document.createElement('p');
+   date.textContent='Submitted: '+(
+    attempt.submitted_at
+     ?new Date(attempt.submitted_at).toLocaleString()
+     :'Not available'
+   );
+
+   box.append(title,subject,course,score,percentage,date);
+   area.appendChild(box);
+  });
+
+ }catch(error){
+  area.textContent='Unable to load exam history: '+error.message;
+ }
+}
+
+// =====================================
+// TOP 10 STUDENTS RANKING
+// =====================================
+
+async function loadTopRanking(target){
+ const area=el(target);
+
+ if(!area)return;
+
+ area.textContent='Loading Top 10 Ranking...';
+
+ try{
+  const {data,error}=await db.rpc('get_exam_top_ten');
+
+  if(error)throw error;
+
+  area.innerHTML='';
+
+  if(!data||data.length===0){
+   area.textContent='No examination rankings available yet.';
+   return;
+  }
+
+  data.forEach(student=>{
+   const box=document.createElement('div');
+   box.className='material';
+
+   if(student.rank_position===1)box.classList.add('rank-first');
+   if(student.rank_position===2)box.classList.add('rank-second');
+   if(student.rank_position===3)box.classList.add('rank-third');
+
+   const heading=document.createElement('h3');
+
+   let medal='';
+
+   if(student.rank_position===1)medal=' 🥇';
+   else if(student.rank_position===2)medal=' 🥈';
+   else if(student.rank_position===3)medal=' 🥉';
+
+   heading.textContent='#'+student.rank_position+' '+student.student_name+medal;
+
+   const exams=document.createElement('p');
+   exams.textContent='Examinations completed: '+student.exams_taken;
+
+   const score=document.createElement('p');
+   score.textContent='Total Score: '+student.total_score+'/'+student.total_possible;
+
+   const average=document.createElement('p');
+   average.textContent='Average Performance: '+student.average_percentage+'%';
+
+   box.append(heading,exams,score,average);
+   area.appendChild(box);
+  });
+
+ }catch(error){
+  area.textContent='Unable to load ranking: '+error.message;
+ }
+}
+
 // LOGOUT
 async function logout(){
  clearInterval(examTimerInterval);
- await db.auth.signOut();location.reload();
+ await db.auth.signOut();
+ location.reload();
 }
 
 // RESTORE LOGIN SESSION
 async function checkSession(){
  const {data}=await db.auth.getSession();
- if(data.session)await showDashboard(data.session.user);
+
+ if(data.session)
+  await showDashboard(data.session.user);
 }
+
 checkSession();
+
 </script>
 </body>
 </html>
